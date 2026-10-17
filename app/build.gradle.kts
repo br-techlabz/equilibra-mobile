@@ -22,6 +22,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
     }
 
     buildTypes {
@@ -31,10 +32,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "API_BASE_URL", "\"https://api.equilibra.com.br/api/\"")
         }
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
         }
     }
 
@@ -49,6 +52,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {
@@ -65,14 +69,36 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
+    // Rede
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.serialization)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Testes unitários
+    testImplementation(libs.junit.junit)
+    testImplementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.turbine.turbine)
+    testImplementation(libs.mockk.mockk)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
 }
