@@ -3,6 +3,7 @@ package br.com.equilibra.mobile.di
 import br.com.equilibra.mobile.BuildConfig
 import br.com.equilibra.mobile.data.remote.AuthApi
 import br.com.equilibra.mobile.data.remote.AuthInterceptor
+import br.com.equilibra.mobile.data.remote.DashboardApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
 import br.com.equilibra.mobile.data.remote.TokenAuthenticator
 import dagger.Module
@@ -71,4 +72,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAuthApi(retrofit: Retrofit): AuthApi = retrofit.create(AuthApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideDashboardApi(retrofit: Retrofit): DashboardApi = retrofit.create(DashboardApi::class.java)
 }
