@@ -73,13 +73,14 @@ fun RecentTransactionsSection(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
-                // Ordenação respeita backend (já vem ordenada por occurredAt DESC)
-                transactions.forEachIndexed { index, tx ->
+                // Ordenação respeita backend (já vem ordenada por occurredAt DESC); exibe até 5
+                val visible = transactions.take(5)
+                visible.forEachIndexed { index, tx ->
                     RecentTransactionRow(
                         transaction = tx,
                         onClick = { onTransactionClick(tx) }
                     )
-                    if (index < transactions.lastIndex) {
+                    if (index < visible.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(horizontal = 16.dp),
                             color = MaterialTheme.colorScheme.outlineVariant
