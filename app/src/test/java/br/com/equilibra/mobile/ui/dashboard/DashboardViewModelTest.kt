@@ -9,6 +9,8 @@ import br.com.equilibra.mobile.domain.model.dashboard.CardSummary
 import br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriod
+import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodSelection
+import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodType
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary
 import br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction
 import io.mockk.coEvery
@@ -25,6 +27,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModelTest {
@@ -146,17 +149,22 @@ class DashboardViewModelTest {
 
         assertTrue(vm.uiState.value is DashboardUiState.Success)
 
-        val customDashboard = successDashboard().copy(
-            period = DashboardPeriod("2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z")
-        )
-        coEvery { repository.getDashboard("2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z") } returns ApiResult.Success(customDashboard)
+        val from = LocalDate.of(2026, 9, 1)
+        val to = LocalDate.of(2026, 9, 30)
+        val period = DashboardPeriodSelection.custom(from, to)
+        val (fromIso, toIso) = period.toIso() // 2026-09-01T00:00:00Z, 2026-10-01T00:00:00Z
 
-        vm.load("2026-09-01T00:00:00Z", "2026-09-30T23:59:59Z")
+        val customDashboard = successDashboard().copy(
+            period = DashboardPeriod(fromIso, toIso)
+        )
+        coEvery { repository.getDashboard(fromIso, toIso) } returns ApiResult.Success(customDashboard)
+
+        vm.selectCustomPeriod(from, to)
         advanceUntilIdle()
 
         val state = vm.uiState.value
         assertTrue(state is DashboardUiState.Success)
-        assertEquals("2026-09-01T00:00:00Z", (state as DashboardUiState.Success).dashboard.period.from)
+        assertEquals(fromIso, (state as DashboardUiState.Success).dashboard.period.from)
         Dispatchers.resetMain()
     }
 
@@ -475,6 +483,130 @@ class DashboardViewModelTest {
         val state = vm.uiState.value as DashboardUiState.Success
         assertEquals("500.00", state.dashboard.cardSummary.committedLimit)
         assertEquals("4500.00", state.dashboard.cardSummary.availableLimit)
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.9 — Filtro de período
+
+    @Test
+    fun `mudar para mês anterior recarrega dados`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard())
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        assertTrue(vm.uiState.value is DashboardUiState.Success)
+
+        val prevMonth = DashboardPeriodSelection.previousMonth()
+        val (from, to) = prevMonth.toIso()
+        coEvery { repository.getDashboard(from, to) } returns ApiResult.Success(successDashboard())
+
+        vm.selectPeriod(DashboardPeriodType.PREVIOUS_MONTH)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(DashboardPeriodType.PREVIOUS_MONTH, state.selectedPeriod.type)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `mudar para mês atual recarrega dados`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard())
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        // Muda para mês anterior primeiro
+        val prevMonth = DashboardPeriodSelection.previousMonth()
+        val (from1, to1) = prevMonth.toIso()
+        coEvery { repository.getDashboard(from1, to1) } returns ApiResult.Success(successDashboard())
+        vm.selectPeriod(DashboardPeriodType.PREVIOUS_MONTH)
+        advanceUntilIdle()
+
+        // Volta para mês atual
+        val currMonth = DashboardPeriodSelection.currentMonth()
+        val (from2, to2) = currMonth.toIso()
+        coEvery { repository.getDashboard(from2, to2) } returns ApiResult.Success(successDashboard())
+        vm.selectPeriod(DashboardPeriodType.CURRENT_MONTH)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(DashboardPeriodType.CURRENT_MONTH, state.selectedPeriod.type)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `período customizado válido recarrega dados`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard())
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val customFrom = LocalDate.of(2026, 1, 1)
+        val customTo = LocalDate.of(2026, 3, 31)
+        val period = DashboardPeriodSelection.custom(customFrom, customTo)
+        val (from, to) = period.toIso()
+        coEvery { repository.getDashboard(from, to) } returns ApiResult.Success(successDashboard())
+
+        vm.selectCustomPeriod(customFrom, customTo)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(DashboardPeriodType.CUSTOM, state.selectedPeriod.type)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `período customizado inválido não chama API e exibe erro`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard())
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val invalidFrom = LocalDate.of(2026, 10, 31)
+        val invalidTo = LocalDate.of(2026, 10, 1)
+        vm.selectCustomPeriod(invalidFrom, invalidTo)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertTrue(state is DashboardUiState.Error)
+        assertTrue((state as DashboardUiState.Error).message.contains("inválido", ignoreCase = true))
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `período igual (from == to) é inválido`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard())
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val sameDay = LocalDate.of(2026, 10, 15)
+        vm.selectCustomPeriod(sameDay, sameDay)
+        advanceUntilIdle()
+
+        assertTrue(vm.uiState.value is DashboardUiState.Error)
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.10 — Sem cache Room (dashboard sempre consulta API)
+
+    @Test
+    fun `cada load consulta API (sem cache)`() = runTest {
+        var calls = 0
+        coEvery { repository.getDashboard(any(), any()) } coAnswers {
+            calls++
+            ApiResult.Success(successDashboard())
+        }
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        assertEquals(1, calls)
+
+        vm.retry()
+        advanceUntilIdle()
+        assertEquals(2, calls)
+
+        vm.load()
+        advanceUntilIdle()
+        assertEquals(3, calls)
         Dispatchers.resetMain()
     }
 }

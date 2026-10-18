@@ -25,24 +25,27 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodSelection
 import br.com.equilibra.mobile.ui.dashboard.components.AccountBalancesSection
 import br.com.equilibra.mobile.ui.dashboard.components.BalanceEvolutionChart
 import br.com.equilibra.mobile.ui.dashboard.components.CardSummarySection
 import br.com.equilibra.mobile.ui.dashboard.components.CategoryChartsSection
+import br.com.equilibra.mobile.ui.dashboard.components.PeriodFilterSection
 import br.com.equilibra.mobile.ui.dashboard.components.RecentTransactionsSection
 import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
 
 /**
- * Tela de Dashboard (Task 2.8).
+ * Tela de Dashboard (Task 2.9 + 2.10).
  *
  * Seções:
+ * - PeriodFilterSection (Task 2.9) — filtro de período
  * - SummaryCards (Task 2.3)
  * - AccountBalancesSection (Task 2.4) — saldos por conta
  * - RecentTransactionsSection (Task 2.5) — feed de transações recentes
  * - BalanceEvolutionChart (Task 2.6) — gráfico temporal
  * - CategoryChartsSection (Task 2.7) — despesas/receitas por categoria
  * - CardSummarySection (Task 2.8) — resumo de cartão
- * - As Tasks 2.9–2.10 implementarão as demais seções
+ * - Task 2.10: sem cache Room — sempre da API
  */
 @Composable
 fun DashboardScreen(
@@ -71,6 +74,9 @@ fun DashboardScreen(
                 expenseByCategory = s.dashboard.expenseByCategory,
                 incomeByCategory = s.dashboard.incomeByCategory,
                 cardSummary = s.dashboard.cardSummary,
+                selectedPeriod = s.selectedPeriod,
+                onPeriodTypeSelected = { viewModel.selectPeriod(it) },
+                onCustomPeriodSelected = { from, to -> viewModel.selectCustomPeriod(from, to) },
                 onAccountClick = onAccountClick,
                 onTransactionClick = onTransactionClick,
                 onNavigateToCards = onNavigateToCards
@@ -79,7 +85,10 @@ fun DashboardScreen(
             is DashboardUiState.Error -> ErrorContent(
                 message = s.message,
                 canRetry = s.canRetry,
-                onRetry = { viewModel.retry() }
+                selectedPeriod = s.selectedPeriod,
+                onRetry = { viewModel.retry() },
+                onPeriodTypeSelected = { viewModel.selectPeriod(it) },
+                onCustomPeriodSelected = { from, to -> viewModel.selectCustomPeriod(from, to) }
             )
         }
     }
@@ -115,6 +124,9 @@ private fun SuccessContent(
     expenseByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
     incomeByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
     cardSummary: br.com.equilibra.mobile.domain.model.dashboard.CardSummary,
+    selectedPeriod: DashboardPeriodSelection,
+    onPeriodTypeSelected: (br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodType) -> Unit,
+    onCustomPeriodSelected: (java.time.LocalDate, java.time.LocalDate) -> Unit,
     onAccountClick: (String) -> Unit,
     onTransactionClick: (String) -> Unit,
     onNavigateToCards: () -> Unit
@@ -130,6 +142,12 @@ private fun SuccessContent(
             text = "Dashboard",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary
+        )
+
+        PeriodFilterSection(
+            selectedPeriod = selectedPeriod,
+            onPeriodTypeSelected = onPeriodTypeSelected,
+            onCustomPeriodSelected = onCustomPeriodSelected
         )
 
         Text(
@@ -165,7 +183,7 @@ private fun SuccessContent(
             onNavigateToCards = onNavigateToCards
         )
 
-        // Seções futuras (Tasks 2.9–2.10) serão adicionadas aqui
+        // Task 2.10: sem cache Room — garantido no ViewModel
     }
 }
 
@@ -173,7 +191,10 @@ private fun SuccessContent(
 private fun ErrorContent(
     message: String,
     canRetry: Boolean,
-    onRetry: () -> Unit
+    selectedPeriod: DashboardPeriodSelection?,
+    onRetry: () -> Unit,
+    onPeriodTypeSelected: (br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodType) -> Unit,
+    onCustomPeriodSelected: (java.time.LocalDate, java.time.LocalDate) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -182,6 +203,15 @@ private fun ErrorContent(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (selectedPeriod != null) {
+            PeriodFilterSection(
+                selectedPeriod = selectedPeriod,
+                onPeriodTypeSelected = onPeriodTypeSelected,
+                onCustomPeriodSelected = onCustomPeriodSelected
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
