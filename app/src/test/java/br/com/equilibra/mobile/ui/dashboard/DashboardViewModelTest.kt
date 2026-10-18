@@ -7,6 +7,7 @@ import br.com.equilibra.mobile.domain.model.dashboard.CardSummary
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriod
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary
+import br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -29,12 +30,13 @@ class DashboardViewModelTest {
     private lateinit var repository: DashboardRepository
 
     private fun successDashboard(
-        accounts: List<AccountBalance> = emptyList()
+        accounts: List<AccountBalance> = emptyList(),
+        recentTransactions: List<RecentTransaction> = emptyList()
     ) = Dashboard(
         period = DashboardPeriod("2026-10-01T00:00:00Z", "2026-10-31T23:59:59Z"),
         summary = DashboardSummary("1000.00", "500.00", "500.00", "5000.00"),
         accounts = accounts,
-        recentTransactions = emptyList(),
+        recentTransactions = recentTransactions,
         balanceEvolution = emptyList(),
         expenseByCategory = emptyList(),
         incomeByCategory = emptyList(),
@@ -233,6 +235,72 @@ class DashboardViewModelTest {
         vm.retry()
         advanceUntilIdle()
         assertEquals(2, calls)
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.5 — Transações recentes
+
+    @Test
+    fun `sucesso com transações exibe lista correta`() = runTest {
+        val transactions = listOf(
+            RecentTransaction("tx1", "EXPENSE", "Supermercado", "2026-10-15T10:00:00Z", "100.00", "acc1", null, "ACTIVE", "BANK_ACCOUNT"),
+            RecentTransaction("tx2", "INCOME", "Salário", "2026-10-14T09:00:00Z", "1000.00", null, "acc1", "ACTIVE", "BANK_ACCOUNT")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(recentTransactions = transactions))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(2, state.dashboard.recentTransactions.size)
+        assertEquals("Supermercado", state.dashboard.recentTransactions[0].description)
+        assertEquals("100.00", state.dashboard.recentTransactions[0].amount)
+        assertEquals("Salário", state.dashboard.recentTransactions[1].description)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sucesso com transações vazias não quebra`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(recentTransactions = emptyList()))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertTrue(state.dashboard.recentTransactions.isEmpty())
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `ordem das transações respeita backend`() = runTest {
+        // Backend retorna ordenada por occurredAt DESC
+        val transactions = listOf(
+            RecentTransaction("tx1", "EXPENSE", "Mais recente", "2026-10-15T10:00:00Z", "50.00", "acc1", null, "ACTIVE", "BANK_ACCOUNT"),
+            RecentTransaction("tx2", "EXPENSE", "Mais antiga", "2026-10-14T10:00:00Z", "30.00", "acc1", null, "ACTIVE", "BANK_ACCOUNT")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(recentTransactions = transactions))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals("Mais recente", state.dashboard.recentTransactions[0].description)
+        assertEquals("Mais antiga", state.dashboard.recentTransactions[1].description)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `transação cancelada tem status CANCELLED`() = runTest {
+        val transactions = listOf(
+            RecentTransaction("tx1", "EXPENSE", "Cancelada", "2026-10-15T10:00:00Z", "50.00", "acc1", null, "CANCELLED", "BANK_ACCOUNT")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(recentTransactions = transactions))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals("CANCELLED", state.dashboard.recentTransactions[0].status)
         Dispatchers.resetMain()
     }
 }
