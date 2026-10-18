@@ -37,7 +37,8 @@ class DashboardViewModelTest {
         recentTransactions: List<RecentTransaction> = emptyList(),
         balanceEvolution: List<BalanceSeries> = emptyList(),
         expenseByCategory: List<CategoryExpense> = emptyList(),
-        incomeByCategory: List<CategoryExpense> = emptyList()
+        incomeByCategory: List<CategoryExpense> = emptyList(),
+        cardSummary: CardSummary = CardSummary("0.00", "0.00", "5000.00", "5000.00")
     ) = Dashboard(
         period = DashboardPeriod("2026-10-01T00:00:00Z", "2026-10-31T23:59:59Z"),
         summary = DashboardSummary("1000.00", "500.00", "500.00", "5000.00"),
@@ -46,7 +47,7 @@ class DashboardViewModelTest {
         balanceEvolution = balanceEvolution,
         expenseByCategory = expenseByCategory,
         incomeByCategory = incomeByCategory,
-        cardSummary = CardSummary("0.00", "0.00", "5000.00", "5000.00")
+        cardSummary = cardSummary
     )
 
     @Before
@@ -428,6 +429,52 @@ class DashboardViewModelTest {
             acc + java.math.BigDecimal(cat.amount)
         }
         assertEquals(java.math.BigDecimal("600.00"), total)
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.8 — Resumo de cartão
+
+    @Test
+    fun `sucesso com resumo de cartão exibe valores corretos`() = runTest {
+        val cardSummary = CardSummary("150.00", "100.00", "2000.00", "3000.00")
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(cardSummary = cardSummary))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals("150.00", state.dashboard.cardSummary.pendingStatements)
+        assertEquals("100.00", state.dashboard.cardSummary.nextDueAmount)
+        assertEquals("2000.00", state.dashboard.cardSummary.committedLimit)
+        assertEquals("3000.00", state.dashboard.cardSummary.availableLimit)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `resumo de cartão com todos zero indica sem cartões`() = runTest {
+        val cardSummary = CardSummary("0.00", "0.00", "0.00", "0.00")
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(cardSummary = cardSummary))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals("0.00", state.dashboard.cardSummary.pendingStatements)
+        assertEquals("0.00", state.dashboard.cardSummary.availableLimit)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `resumo de cartão com valor não zero indica cartões existentes`() = runTest {
+        val cardSummary = CardSummary("0.00", "0.00", "500.00", "4500.00")
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(cardSummary = cardSummary))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals("500.00", state.dashboard.cardSummary.committedLimit)
+        assertEquals("4500.00", state.dashboard.cardSummary.availableLimit)
         Dispatchers.resetMain()
     }
 }

@@ -27,12 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.ui.dashboard.components.AccountBalancesSection
 import br.com.equilibra.mobile.ui.dashboard.components.BalanceEvolutionChart
+import br.com.equilibra.mobile.ui.dashboard.components.CardSummarySection
 import br.com.equilibra.mobile.ui.dashboard.components.CategoryChartsSection
 import br.com.equilibra.mobile.ui.dashboard.components.RecentTransactionsSection
 import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
 
 /**
- * Tela de Dashboard (Task 2.7).
+ * Tela de Dashboard (Task 2.8).
  *
  * Seções:
  * - SummaryCards (Task 2.3)
@@ -40,13 +41,15 @@ import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
  * - RecentTransactionsSection (Task 2.5) — feed de transações recentes
  * - BalanceEvolutionChart (Task 2.6) — gráfico temporal
  * - CategoryChartsSection (Task 2.7) — despesas/receitas por categoria
- * - As Tasks 2.8–2.10 implementarão as demais seções
+ * - CardSummarySection (Task 2.8) — resumo de cartão
+ * - As Tasks 2.9–2.10 implementarão as demais seções
  */
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
     onAccountClick: (String) -> Unit = {},
     onTransactionClick: (String) -> Unit = {},
+    onNavigateToCards: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -67,8 +70,10 @@ fun DashboardScreen(
                 balanceEvolution = s.dashboard.balanceEvolution,
                 expenseByCategory = s.dashboard.expenseByCategory,
                 incomeByCategory = s.dashboard.incomeByCategory,
+                cardSummary = s.dashboard.cardSummary,
                 onAccountClick = onAccountClick,
-                onTransactionClick = onTransactionClick
+                onTransactionClick = onTransactionClick,
+                onNavigateToCards = onNavigateToCards
             )
 
             is DashboardUiState.Error -> ErrorContent(
@@ -109,8 +114,10 @@ private fun SuccessContent(
     balanceEvolution: List<br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries>,
     expenseByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
     incomeByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
+    cardSummary: br.com.equilibra.mobile.domain.model.dashboard.CardSummary,
     onAccountClick: (String) -> Unit,
-    onTransactionClick: (String) -> Unit
+    onTransactionClick: (String) -> Unit,
+    onNavigateToCards: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -153,7 +160,12 @@ private fun SuccessContent(
             incomeByCategory = incomeByCategory
         )
 
-        // Seções futuras (Tasks 2.8–2.10) serão adicionadas aqui
+        CardSummarySection(
+            cardSummary = cardSummary,
+            onNavigateToCards = onNavigateToCards
+        )
+
+        // Seções futuras (Tasks 2.9–2.10) serão adicionadas aqui
     }
 }
 
