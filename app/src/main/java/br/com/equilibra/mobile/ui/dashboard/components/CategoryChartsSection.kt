@@ -185,13 +185,7 @@ private fun CategoryChartCard(
                 }
 
                 chart.data = PieData(dataSet)
-                // texto central com total
-                val total = categories.fold(BigDecimal.ZERO) { acc, cat ->
-                    acc + MoneyFormatter.parse(cat.amount)
-                }
-                chart.centerText = MoneyFormatter.format(total.toString())
-                chart.setCenterTextSize(13f)
-                chart.setCenterTextColor(AndroidColor.DKGRAY)
+                chart.centerText = ""
                 chart.invalidate()
             },
             modifier = Modifier
