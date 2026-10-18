@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.math.BigDecimal
 import javax.inject.Inject
 
 data class CreateAccountUiState(
@@ -46,13 +45,8 @@ class CreateAccountViewModel @Inject constructor(
     }
 
     fun onCreateClick() {
-        val nameError = when {
-            _uiState.value.name.trim().isEmpty() -> "Informe o nome"
-            _uiState.value.name.trim().length > 100 -> "Nome deve ter no máximo 100 caracteres"
-            else -> null
-        }
-
-        val balanceError = validateMoney(_uiState.value.initialBalanceInput)
+        val nameError = AccountFormValidator.validateName(_uiState.value.name)
+        val balanceError = AccountFormValidator.validateMoney(_uiState.value.initialBalanceInput)
 
         if (nameError != null || balanceError != null) {
             _uiState.update { it.copy(nameError = nameError, initialBalanceError = balanceError) }
@@ -63,7 +57,7 @@ class CreateAccountViewModel @Inject constructor(
 
         val nameSnapshot = _uiState.value.name.trim()
         val typeSnapshot = _uiState.value.type
-        val balanceSnapshot = normalizeMoney(_uiState.value.initialBalanceInput)
+        val balanceSnapshot = AccountFormValidator.normalizeMoney(_uiState.value.initialBalanceInput)
 
         _uiState.update { it.copy(isLoading = true, generalError = null) }
 
@@ -104,35 +98,6 @@ class CreateAccountViewModel @Inject constructor(
 
     fun clearGeneralError() {
         _uiState.update { it.copy(generalError = null) }
-    }
-
-    private fun validateMoney(input: String): String? {
-        val trimmed = input.trim()
-        if (trimmed.isEmpty()) return "Informe o saldo inicial"
-        // Aceita 1.234,56 ou 1234.56 ou 1234
-        val normalized = trimmed.replace(".", "").replace(",", ".").let {
-            // Se tinha vírgula, já trocou; se tinha ponto como separador de milhar, removeu
-            // Mas se era "1,234.56" (ponto milhar + vírgula decimal) — não comum no Brasil
-            // Simplifica: aceita apenas dígitos, ponto, vírgula e sinal negativo
-            trimmed.replace(",", ".")
-        }.replace(" ", "")
-        // Valida com regex simples e tenta BigDecimal
-        return try {
-            val bd = BigDecimal(normalized)
-            if (bd.scale() > 2) return "Máximo 2 casas decimais"
-            null
-        } catch (_: Exception) {
-            "Valor inválido"
-        }
-    }
-
-    private fun normalizeMoney(input: String): String {
-        val trimmed = input.trim().replace(",", ".").replace(" ", "")
-        return try {
-            BigDecimal(trimmed).setScale(2).toPlainString()
-        } catch (_: Exception) {
-            trimmed
-        }
     }
 
     private fun parseDetail(body: String?): String? {

@@ -20,8 +20,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import br.com.equilibra.mobile.ui.accounts.AccountsScreen
 import br.com.equilibra.mobile.ui.accounts.CreateAccountScreen
+import br.com.equilibra.mobile.ui.accounts.EditAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
 import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
@@ -117,13 +120,23 @@ private fun MainTabsNavHost(
 
         composable(MainTab.TRANSACTIONS.route) {
             AccountsScreen(
-                onAccountClick = { /* Task 3.7: editar */ },
+                onAccountClick = { id -> navController.navigate("accounts/$id/edit") },
                 onCreateClick = { navController.navigate("accounts/create") }
             )
         }
 
         composable("accounts/create") {
             CreateAccountScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "accounts/{accountId}/edit",
+            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
+        ) {
+            EditAccountScreen(
                 onSuccess = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
