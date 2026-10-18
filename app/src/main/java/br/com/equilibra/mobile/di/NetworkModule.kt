@@ -3,6 +3,7 @@ package br.com.equilibra.mobile.di
 import br.com.equilibra.mobile.BuildConfig
 import br.com.equilibra.mobile.data.remote.AuthApi
 import br.com.equilibra.mobile.data.remote.AuthInterceptor
+import br.com.equilibra.mobile.data.remote.CategoryApi
 import br.com.equilibra.mobile.data.remote.AssetAccountApi
 import br.com.equilibra.mobile.data.remote.DashboardApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
@@ -81,4 +82,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideAssetAccountApi(retrofit: Retrofit): AssetAccountApi = retrofit.create(AssetAccountApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideCategoryApi(retrofit: Retrofit): CategoryApi = retrofit.create(CategoryApi::class.java)
 }
