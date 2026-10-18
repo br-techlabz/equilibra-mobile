@@ -2,6 +2,7 @@ package br.com.equilibra.mobile.ui.dashboard
 
 import br.com.equilibra.mobile.data.dashboard.DashboardRepository
 import br.com.equilibra.mobile.data.remote.ApiResult
+import br.com.equilibra.mobile.domain.model.dashboard.AccountBalance
 import br.com.equilibra.mobile.domain.model.dashboard.CardSummary
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriod
@@ -27,10 +28,12 @@ class DashboardViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var repository: DashboardRepository
 
-    private fun successDashboard() = Dashboard(
+    private fun successDashboard(
+        accounts: List<AccountBalance> = emptyList()
+    ) = Dashboard(
         period = DashboardPeriod("2026-10-01T00:00:00Z", "2026-10-31T23:59:59Z"),
         summary = DashboardSummary("1000.00", "500.00", "500.00", "5000.00"),
-        accounts = emptyList(),
+        accounts = accounts,
         recentTransactions = emptyList(),
         balanceEvolution = emptyList(),
         expenseByCategory = emptyList(),
@@ -157,6 +160,79 @@ class DashboardViewModelTest {
 
         val state = vm.uiState.value as DashboardUiState.Success
         assertTrue(state.periodLabel.contains("2026"))
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.4 — Saldos por conta
+
+    @Test
+    fun `sucesso com contas exibe lista correta`() = runTest {
+        val accounts = listOf(
+            AccountBalance("id1", "Conta Corrente", "CHECKING", "1000.00", "1500.00", true),
+            AccountBalance("id2", "Poupança", "SAVINGS", "500.00", "600.00", true)
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(accounts))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(2, state.dashboard.accounts.size)
+        assertEquals("Conta Corrente", state.dashboard.accounts[0].name)
+        assertEquals("1500.00", state.dashboard.accounts[0].currentBalance)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sucesso com lista vazia não quebra`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(emptyList()))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertTrue(state.dashboard.accounts.isEmpty())
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `ordem das contas respeita API (não reordena no ViewModel)`() = runTest {
+        // O backend retorna ordenado por nome (ORDER BY name ASC)
+        // O ViewModel não deve reordenar; a UI faz ordenação estável
+        val accounts = listOf(
+            AccountBalance("id2", "Conta B", "CHECKING", "0.00", "100.00", true),
+            AccountBalance("id1", "Conta A", "CHECKING", "0.00", "200.00", true)
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(accounts))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        // ViewModel preserva ordem da API
+        assertEquals("Conta B", state.dashboard.accounts[0].name)
+        assertEquals("Conta A", state.dashboard.accounts[1].name)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `não dispara chamadas duplicadas desnecessárias`() = runTest {
+        var calls = 0
+        coEvery { repository.getDashboard(any(), any()) } coAnswers {
+            calls++
+            ApiResult.Success(successDashboard())
+        }
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        // Apenas 1 chamada no init
+        assertEquals(1, calls)
+
+        // Retry causa 1 chamada adicional
+        vm.retry()
+        advanceUntilIdle()
+        assertEquals(2, calls)
         Dispatchers.resetMain()
     }
 }

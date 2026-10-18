@@ -25,21 +25,21 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.equilibra.mobile.ui.dashboard.components.AccountBalancesSection
 import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
 
 /**
- * Tela de Dashboard (Task 2.3).
+ * Tela de Dashboard (Task 2.4).
  *
- * Exibe cards de resumo financeiro com estados completos:
- * - Loading: spinner
- * - Success: cards + período aplicado
- * - Error: mensagem + retry
- *
- * Valores monetários formatados em pt-BR via MoneyFormatter (BigDecimal).
+ * Seções:
+ * - SummaryCards (Task 2.3)
+ * - AccountBalancesSection (Task 2.4) — saldos por conta, ordenação estável, sem chamadas duplicadas
+ * - As Tasks 2.5–2.10 implementarão as demais seções
  */
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
+    onAccountClick: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -54,7 +54,9 @@ fun DashboardScreen(
 
             is DashboardUiState.Success -> SuccessContent(
                 periodLabel = s.periodLabel,
-                summary = s.dashboard.summary
+                summary = s.dashboard.summary,
+                accounts = s.dashboard.accounts,
+                onAccountClick = onAccountClick
             )
 
             is DashboardUiState.Error -> ErrorContent(
@@ -89,7 +91,9 @@ private fun LoadingContent() {
 @Composable
 private fun SuccessContent(
     periodLabel: String,
-    summary: br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary
+    summary: br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary,
+    accounts: List<br.com.equilibra.mobile.domain.model.dashboard.AccountBalance>,
+    onAccountClick: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -113,7 +117,12 @@ private fun SuccessContent(
 
         SummaryCards(summary = summary)
 
-        // Seções futuras (Tasks 2.4–2.10) serão adicionadas aqui
+        AccountBalancesSection(
+            accounts = accounts,
+            onAccountClick = { onAccountClick(it.accountId) }
+        )
+
+        // Seções futuras (Tasks 2.5–2.10) serão adicionadas aqui
     }
 }
 
