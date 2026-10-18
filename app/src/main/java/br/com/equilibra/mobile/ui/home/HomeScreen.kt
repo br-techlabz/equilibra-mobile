@@ -11,22 +11,30 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 
+/**
+ * Tela de Home (legado — Sprint 1).
+ *
+ * A navegação principal agora é feita pela [MainTabsScreen] (Sprint 2).
+ * Este composable é mantido para referência histórica, mas não é mais
+ * usado no fluxo de navegação ativo.
+ *
+ * O logout agora é acionado pela aba "Mais" ([br.com.equilibra.mobile.ui.more.MoreScreen]).
+ */
+@Deprecated(
+    message = "Use MainTabsScreen para navegação principal. Mantido apenas para referência.",
+    replaceWith = ReplaceWith("MainTabsScreen")
+)
 @Composable
 fun HomeScreen(
     onLoggedOut: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel()
+    modifier: Modifier = Modifier
 ) {
-    val state by viewModel.uiState.collectAsState()
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
@@ -36,33 +44,16 @@ fun HomeScreen(
             text = "Bem-vindo ao Equilibra",
             style = MaterialTheme.typography.headlineSmall
         )
-        state.email?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
         Spacer(modifier = Modifier.height(32.dp))
 
-        if (state.isLoggingOut) {
-            CircularProgressIndicator()
-        } else {
-            Button(
-                onClick = { viewModel.onLogout(onLoggedOut) }
-            ) {
-                Text("Sair")
-            }
-        }
+        CircularProgressIndicator()
 
-        state.error?.let {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = it,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Carregando...",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

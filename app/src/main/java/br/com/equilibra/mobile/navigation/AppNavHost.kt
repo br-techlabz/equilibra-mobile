@@ -10,13 +10,26 @@ import br.com.equilibra.mobile.ui.login.LoginScreen
 import br.com.equilibra.mobile.ui.register.RegisterScreen
 import br.com.equilibra.mobile.ui.splash.SplashScreen
 
+/**
+ * Rotas principais do app.
+ *
+ * Estrutura de dois níveis:
+ * - Auth: Splash, Login, Register (pré-autenticação)
+ * - Main: MainTabsScreen (pós-autenticação, contém BottomNavigation interna)
+ */
 object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
-    const val HOME = "home"
+    const val MAIN = "main"
 }
 
+/**
+ * NavHost principal do app.
+ *
+ * Controla a navegação de alto nível entre fluxo de autenticação
+ * e fluxo principal (Dashboard/Transações/Cartões/Relatórios/Mais).
+ */
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController()
@@ -28,7 +41,7 @@ fun AppNavHost(
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToHome = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.MAIN) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -45,7 +58,7 @@ fun AppNavHost(
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.MAIN) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                         launchSingleTop = true
                     }
@@ -68,11 +81,11 @@ fun AppNavHost(
             )
         }
 
-        composable(Routes.HOME) {
-            HomeScreen(
+        composable(Routes.MAIN) {
+            MainTabsScreen(
                 onLoggedOut = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                        popUpTo(Routes.MAIN) { inclusive = true }
                         launchSingleTop = true
                     }
                 }

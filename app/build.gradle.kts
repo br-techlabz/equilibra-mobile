@@ -22,7 +22,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
+        buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8090/api/\"")
     }
 
     buildTypes {
@@ -37,7 +37,7 @@ android {
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
-            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080/api/\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8090/api/\"")
         }
     }
 
@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)

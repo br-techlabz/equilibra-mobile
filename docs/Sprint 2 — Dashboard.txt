@@ -1,0 +1,111 @@
+# Sprint 2 — Dashboard
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 2.1 — BottomNavigation
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.1 — BottomNavigation** do Equilibra Mobile. Objetivo: Criar navegação principal Dashboard, Transações, Cartões, Relatórios e Mais. Crie destinos e ícones Material apropriados; preserve estado das abas quando viável; implemente Mais como ponto de entrada para áreas ainda não entregues, sem links quebrados.
+>
+> Critérios de aceite: Seleção visual correta; navegação acessível; funciona em telas compactas.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.2 — DashboardApi e DTOs
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.2 — DashboardApi e DTOs** do Equilibra Mobile. Objetivo: Criar camada remota para resumo, contas, transações recentes, evolução, categorias e cartões. Inspecione contrato real de /dashboard; use modelos explícitos para cada seção e tratamento de campos opcionais/datas/valores.
+>
+> Critérios de aceite: Chamadas e DTOs aderem ao backend; parsing testado; erros padronizados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.3 — Cards de resumo financeiro
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.3 — Cards de resumo financeiro** do Equilibra Mobile. Objetivo: Exibir receita, despesa, saldo líquido e patrimônio no dashboard. Carregue sempre da API; modele loading, erro, retry e conteúdo; formate moeda pt-BR e valores com precisão decimal sem conversão para Float/Double em cálculos financeiros.
+>
+> Critérios de aceite: Indicadores exibem valores da API e período aplicado; estados completos; acessibilidade.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.4 — Saldos por conta
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.4 — Saldos por conta** do Equilibra Mobile. Objetivo: Exibir saldo por conta no dashboard. Use dados do endpoint dashboard, ordenação estável e formatação consistente; ao tocar em conta, navegue para detalhe/lista se já existir destino, sem criar fluxo fictício.
+>
+> Critérios de aceite: Lista correta, vazia e com erro; não dispara chamadas duplicadas desnecessárias.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.5 — Transações recentes
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.5 — Transações recentes** do Equilibra Mobile. Objetivo: Exibir feed de transações recentes. Apresente tipo, descrição, data, conta/categoria disponíveis e valor com semântica visual; diferencie canceladas quando informadas.
+>
+> Critérios de aceite: Dados vêm da API; ordenação respeita backend; clique abre detalhe somente se implementado.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.6 — Gráfico de evolução de saldo
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.6 — Gráfico de evolução de saldo** do Equilibra Mobile. Objetivo: Implementar gráfico temporal usando MPAndroidChart. Verifique compatibilidade da biblioteca com Compose; encapsule via AndroidView se necessário. Respeite formato de dados real, estados vazios e legibilidade em telas pequenas.
+>
+> Critérios de aceite: Eixos/rótulos legíveis; sem dados não quebra; valores correspondem à API.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.7 — Gráficos por categoria
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.7 — Gráficos por categoria** do Equilibra Mobile. Objetivo: Exibir despesas e receitas por categoria em barras/rosca. Use dados agregados da API; permita distinguir despesa/receita; inclua legenda, cores semânticas acessíveis e fallback quando não houver categorias.
+>
+> Critérios de aceite: Totais/legendas consistentes; gráfico adapta-se à largura; sem dados tratado.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.8 — Resumo de cartão
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.8 — Resumo de cartão** do Equilibra Mobile. Objetivo: Mostrar pendências, próximo vencimento e limite. Use campos reais retornados pelo dashboard; não calcule faturas se backend já fornece agregados. Trate ausência de cartões e faturas.
+>
+> Critérios de aceite: Resumo fiel à API e navegação para Cartões quando disponível.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.9 — Filtro de período
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.9 — Filtro de período** do Equilibra Mobile. Objetivo: Adicionar mês atual, mês anterior e intervalo customizado. Defina datas no fuso esperado pelo backend; serialize ISO 8601; mantenha filtro aplicado às seções relevantes e previna intervalos inválidos.
+>
+> Critérios de aceite: Mudança de período atualiza dados; intervalo validado; estado exibido ao usuário.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 2.10 — Dashboard sem cache Room
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 2.10 — Dashboard sem cache Room** do Equilibra Mobile. Objetivo: Garantir que dashboard sempre seja carregado da API. Revise implementação e documente a regra: não persistir agregados do dashboard no Room; exibir loading/erro/retry sem substituir por cache obsoleto.
+>
+> Critérios de aceite: Dashboard sempre consulta API e não depende de cache local.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
