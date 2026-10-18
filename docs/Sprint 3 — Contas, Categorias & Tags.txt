@@ -1,0 +1,157 @@
+
+# Sprint 3 — Contas, Categorias & Tags
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 3.1 — Configurar Room
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.1 — Configurar Room** do Equilibra Mobile. Objetivo: Criar banco equilibra.db, DAOs, módulos Hilt e migrações. Configure versão inicial, exportação de schemas e testes; migrações futuras devem ser explícitas, sem fallback destrutivo em produção.
+>
+> Critérios de aceite: Banco abre via DI; schema exportado; teste de criação e migração.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.2 — AccountEntity e AccountDao
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.2 — AccountEntity e AccountDao** do Equilibra Mobile. Objetivo: Criar entidade e operações locais de conta. Use UUID como String; BigDecimal serializado como String; timestamps ISO/epoch conforme modelo; implemente consultas necessárias para lista e sincronização.
+>
+> Critérios de aceite: CRUD e getAll testados com Room in-memory; sem perda de precisão.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.3 — AssetAccountApi e DTOs
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.3 — AssetAccountApi e DTOs** do Equilibra Mobile. Objetivo: Criar endpoints e DTOs de contas e reconciliação. Inspecione endpoints e contrato de reconcile; cubra listar, obter, criar, atualizar, ativar/desativar e reconciliar conforme API real.
+>
+> Critérios de aceite: DTOs aderentes ao backend e testes de serialização.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.4 — AccountRepository
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.4 — AccountRepository** do Equilibra Mobile. Objetivo: Implementar API como fonte da verdade e sincronização Room. Leitura inicial deve emitir cache e depois atualizar com API; pull-to-refresh consulta API; escritas só atualizam Room após sucesso remoto; erros não apagam cache válido.
+>
+> Critérios de aceite: Fluxos online/offline e falhas cobertos por testes.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.5 — Lista de contas
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.5 — Lista de contas** do Equilibra Mobile. Objetivo: Criar tela que lê Room primeiro e sincroniza em background. Inclua pull-to-refresh, loading inicial, atualização silenciosa, vazio, erro recuperável, saldo formatado e status ativo/inativo.
+>
+> Critérios de aceite: Lista abre com cache e converge para API; estados e refresh funcionam.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.6 — Criar conta
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.6 — Criar conta** do Equilibra Mobile. Objetivo: Formulário com nome, tipo e saldo inicial. Tipos suportados: CHECKING, SAVINGS, CASH, INVESTMENT, DIGITAL, OTHER; use labels pt-BR. Validar valor monetário, enviar API e atualizar Room somente em sucesso.
+>
+> Critérios de aceite: Criação funciona; erros do servidor aparecem; não há duplicação por toque repetido.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.7 — Editar e ativar/desativar conta
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.7 — Editar e ativar/desativar conta** do Equilibra Mobile. Objetivo: Implementar edição e mudança de status. Reutilize formulário; confirme desativação se houver impacto; respeite restrições do backend e atualize cache após sucesso.
+>
+> Critérios de aceite: Editar/status refletem API e Room; falha preserva estado anterior.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.8 — Reconciliação de conta
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.8 — Reconciliação de conta** do Equilibra Mobile. Objetivo: Criar tela com data/hora e saldo informado, exibindo diferença e ajuste. Consulte o contrato real; não crie lançamentos localmente se backend gera o ajuste. Mostrar saldo esperado, saldo informado e diferença, e confirmar antes de enviar.
+>
+> Critérios de aceite: Reconciliação enviada uma vez; valores e data corretos; resultado sincronizado.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.9 — CategoryEntity, DAO e API
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.9 — CategoryEntity, DAO e API** do Equilibra Mobile. Objetivo: Criar camada local/remota de categorias e DTOs. Aplicabilidade EXPENSE, INCOME, BOTH; estado ativo; IDs UUID. Verifique endpoints reais para CRUD e ativação.
+>
+> Critérios de aceite: DAO/API/DTOs implementados e testados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.10 — CategoryRepository e tela
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.10 — CategoryRepository e tela** do Equilibra Mobile. Objetivo: Implementar sincronização e CRUD de categorias. Lista Room-first com refresh; formulário nome/aplicabilidade; editar e ativar/desativar; evite remover categorias usadas se backend não permitir.
+>
+> Critérios de aceite: CRUD funcional e cache consistente; estados de tela completos.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.11 — TagEntity, DAO e API
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.11 — TagEntity, DAO e API** do Equilibra Mobile. Objetivo: Criar persistência local e camada remota de tags. Implemente ID, nome, ativo e syncedAt; siga contrato real; índices/constraints conforme necessário.
+>
+> Critérios de aceite: Testes DAO e serialização; build funcional.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.12 — TagRepository e tela
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.12 — TagRepository e tela** do Equilibra Mobile. Objetivo: Implementar sincronização e CRUD de tags. Tela de lista, criação, edição e ativação; Room-first e atualização pós-escrita.
+>
+> Critérios de aceite: CRUD funcional, erros tratados e refresh correto.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.13 — Seletor reutilizável de categoria/tag
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.13 — Seletor reutilizável de categoria/tag** do Equilibra Mobile. Objetivo: Criar componentes Compose que consultam dados do Room. Permitir seleção única/múltipla conforme o formulário consumidor; filtrar categorias por aplicabilidade e apenas opções ativas; suportar loading/vazio.
+>
+> Critérios de aceite: Componente reutilizado sem duplicação; seleção retorna IDs estáveis.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 3.14 — Padrão de lista
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 3.14 — Padrão de lista** do Equilibra Mobile. Objetivo: Padronizar pull-to-refresh, vazio e erro nas listas. Crie componentes compartilhados apenas onde reduz duplicação real; acessibilidade, retry e indicadores consistentes; aplique a contas, categorias e tags desta sprint.
+>
+> Critérios de aceite: Padrão consistente sem quebrar estado/scroll das telas.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
