@@ -127,27 +127,7 @@ private fun CategoryChartCard(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
-        val colors = if (isExpense) {
-            // Despesa: vermelho (acessível)
-            listOf(
-                AndroidColor.parseColor("#C62828"),
-                AndroidColor.parseColor("#EF5350"),
-                AndroidColor.parseColor("#FF8A80"),
-                AndroidColor.parseColor("#B71C1C"),
-                AndroidColor.parseColor("#FF6F00"),
-                AndroidColor.parseColor("#E65100")
-            )
-        } else {
-            // Receita: verde (acessível)
-            listOf(
-                AndroidColor.parseColor("#2E7D32"),
-                AndroidColor.parseColor("#66BB6A"),
-                AndroidColor.parseColor("#A5D6A7"),
-                AndroidColor.parseColor("#1B5E20"),
-                AndroidColor.parseColor("#388E3C"),
-                AndroidColor.parseColor("#81C784")
-            )
-        }
+        val colors = ChartColors.piePalette
 
         AndroidView(
             factory = { ctx ->

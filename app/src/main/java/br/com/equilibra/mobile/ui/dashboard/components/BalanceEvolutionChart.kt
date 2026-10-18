@@ -153,7 +153,7 @@ private fun ChartCard(series: List<BalanceSeries>) {
             },
             update = { chart ->
                 // Converte series para Entry (x = índice, y = balance)
-                val dataSets = series.map { s ->
+                val dataSets = series.mapIndexed { seriesIndex, s ->
                     val entries = s.points.mapIndexed { index, point ->
                         val balance = try {
                             BigDecimal(point.balance).toFloat()
@@ -162,14 +162,10 @@ private fun ChartCard(series: List<BalanceSeries>) {
                         }
                         Entry(index.toFloat(), balance)
                     }
+                    val lineColor = ChartColors.forSeries(seriesIndex)
                     LineDataSet(entries, s.accountName).apply {
-                        color = if (series.size == 1) {
-                            // Cor primária para série única
-                            AndroidColor.parseColor("#2E7D32")
-                        } else {
-                            // Cores distintas para cada série (alternando)
-                            AndroidColor.parseColor("#2E7D32")
-                        }
+                        color = lineColor
+                        setCircleColor(lineColor)
                         lineWidth = 2f
                         setDrawCircles(true)
                         circleRadius = 3f
