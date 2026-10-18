@@ -184,16 +184,10 @@ private fun CategoryChartCard(
                     sliceSpace = 2f
                     selectionShift = 6f
                     setColors(colors.take(categories.size))
-                    valueTextColor = AndroidColor.WHITE
-                    valueTextSize = 11f
-                    valueFormatter = PercentFormatter(chart)
-                    // valor dentro da fatia em percentual; legenda externa mostra R$
+                    setDrawValues(false) // sem labels nas fatias; total fica no centro
                 }
 
-                chart.data = PieData(dataSet).apply {
-                    setValueTextColor(AndroidColor.WHITE)
-                    setValueTextSize(11f)
-                }
+                chart.data = PieData(dataSet)
                 // texto central com total
                 val total = categories.fold(BigDecimal.ZERO) { acc, cat ->
                     acc + MoneyFormatter.parse(cat.amount)
