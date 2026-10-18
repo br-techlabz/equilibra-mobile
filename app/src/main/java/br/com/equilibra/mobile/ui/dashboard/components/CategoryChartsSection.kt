@@ -30,7 +30,6 @@ import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.formatter.PercentFormatter
 import java.math.BigDecimal
 
 /**
@@ -154,6 +153,7 @@ private fun CategoryChartCard(
             factory = { ctx ->
                 PieChart(ctx).apply {
                     description.isEnabled = false
+                    setDrawEntryLabels(false)
                     isDrawHoleEnabled = true
                     holeRadius = 42f
                     transparentCircleRadius = 46f
@@ -161,9 +161,6 @@ private fun CategoryChartCard(
                     setTransparentCircleColor(AndroidColor.TRANSPARENT)
                     setTransparentCircleAlpha(0)
                     legend.isEnabled = false
-                    setUsePercentValues(true)
-                    setEntryLabelColor(AndroidColor.WHITE)
-                    setEntryLabelTextSize(11f)
                     isRotationEnabled = true
                     isHighlightPerTapEnabled = true
                     setExtraOffsets(12f, 12f, 12f, 12f)
@@ -177,14 +174,14 @@ private fun CategoryChartCard(
                     } catch (_: Exception) {
                         0f
                     }
-                    PieEntry(amount, cat.categoryName)
+                    PieEntry(amount)
                 }
 
                 val dataSet = PieDataSet(entries, if (isExpense) "Despesa" else "Receita").apply {
                     sliceSpace = 2f
                     selectionShift = 6f
                     setColors(colors.take(categories.size))
-                    setDrawValues(false) // sem labels nas fatias; total fica no centro
+                    setDrawValues(false)
                 }
 
                 chart.data = PieData(dataSet)
