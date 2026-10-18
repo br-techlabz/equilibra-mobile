@@ -3,6 +3,8 @@ package br.com.equilibra.mobile.di
 import android.content.Context
 import androidx.room.Room
 import br.com.equilibra.mobile.data.local.EquilibraDatabase
+import br.com.equilibra.mobile.data.local.Migrations
+import br.com.equilibra.mobile.data.local.account.AccountDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,11 +13,10 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Task 3.1 — Configurar Room
+ * Task 3.2 — DatabaseModule
  *
- * - Cria o banco equilibra.db via DI (Hilt)
- * - Sem fallbackToDestructiveMigration em produção (migrações explícitas)
- * - Plugins/DAOs serão adicionados nas próximas tasks (3.2, 3.9, 3.11)
+ * - Cria o banco equilibra.db via DI (Hilt), version = 2
+ * - Migrations explícitas (Migrations.ALL); sem fallback destrutivo em produção.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -30,8 +31,10 @@ object DatabaseModule {
             context,
             EquilibraDatabase::class.java,
             EquilibraDatabase.DATABASE_NAME
-        ).build()
+        )
+            .addMigrations(*Migrations.ALL)
+            .build()
 
-    // DAOs serão expostos aqui quando criados, ex:
-    // @Provides fun provideAccountDao(db: EquilibraDatabase): AccountDao = db.accountDao()
+    @Provides
+    fun provideAccountDao(db: EquilibraDatabase): AccountDao = db.accountDao()
 }
