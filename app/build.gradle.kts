@@ -92,6 +92,9 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
 
+    // Gráficos
+    implementation(libs.mpandroidchart)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Testes unitários

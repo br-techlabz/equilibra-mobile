@@ -20,6 +20,7 @@ room = "2.6.1"
 junit = "4.13.2"
 mockwebserver = "4.12.0"
 turbine = "1.1.0"
+mp-android-chart = "3.1.0"
 mockk = "1.13.12"
 
 [libraries]
@@ -52,6 +53,7 @@ okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor",
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junit" }
 turbine-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mp-android-chart" }
 mockk-mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [plugins]

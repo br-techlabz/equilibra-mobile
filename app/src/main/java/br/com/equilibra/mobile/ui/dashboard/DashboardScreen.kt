@@ -26,17 +26,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.ui.dashboard.components.AccountBalancesSection
+import br.com.equilibra.mobile.ui.dashboard.components.BalanceEvolutionChart
 import br.com.equilibra.mobile.ui.dashboard.components.RecentTransactionsSection
 import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
 
 /**
- * Tela de Dashboard (Task 2.5).
+ * Tela de Dashboard (Task 2.6).
  *
  * Seções:
  * - SummaryCards (Task 2.3)
  * - AccountBalancesSection (Task 2.4) — saldos por conta
  * - RecentTransactionsSection (Task 2.5) — feed de transações recentes
- * - As Tasks 2.6–2.10 implementarão as demais seções
+ * - BalanceEvolutionChart (Task 2.6) — gráfico temporal via MPAndroidChart
+ * - As Tasks 2.7–2.10 implementarão as demais seções
  */
 @Composable
 fun DashboardScreen(
@@ -60,6 +62,7 @@ fun DashboardScreen(
                 summary = s.dashboard.summary,
                 accounts = s.dashboard.accounts,
                 transactions = s.dashboard.recentTransactions,
+                balanceEvolution = s.dashboard.balanceEvolution,
                 onAccountClick = onAccountClick,
                 onTransactionClick = onTransactionClick
             )
@@ -99,6 +102,7 @@ private fun SuccessContent(
     summary: br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary,
     accounts: List<br.com.equilibra.mobile.domain.model.dashboard.AccountBalance>,
     transactions: List<br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction>,
+    balanceEvolution: List<br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries>,
     onAccountClick: (String) -> Unit,
     onTransactionClick: (String) -> Unit
 ) {
@@ -134,7 +138,11 @@ private fun SuccessContent(
             onTransactionClick = { onTransactionClick(it.id) }
         )
 
-        // Seções futuras (Tasks 2.6–2.10) serão adicionadas aqui
+        BalanceEvolutionChart(
+            series = balanceEvolution
+        )
+
+        // Seções futuras (Tasks 2.7–2.10) serão adicionadas aqui
     }
 }
 

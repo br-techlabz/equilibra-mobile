@@ -3,6 +3,8 @@ package br.com.equilibra.mobile.ui.dashboard
 import br.com.equilibra.mobile.data.dashboard.DashboardRepository
 import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.domain.model.dashboard.AccountBalance
+import br.com.equilibra.mobile.domain.model.dashboard.BalancePoint
+import br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries
 import br.com.equilibra.mobile.domain.model.dashboard.CardSummary
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriod
@@ -31,13 +33,14 @@ class DashboardViewModelTest {
 
     private fun successDashboard(
         accounts: List<AccountBalance> = emptyList(),
-        recentTransactions: List<RecentTransaction> = emptyList()
+        recentTransactions: List<RecentTransaction> = emptyList(),
+        balanceEvolution: List<BalanceSeries> = emptyList()
     ) = Dashboard(
         period = DashboardPeriod("2026-10-01T00:00:00Z", "2026-10-31T23:59:59Z"),
         summary = DashboardSummary("1000.00", "500.00", "500.00", "5000.00"),
         accounts = accounts,
         recentTransactions = recentTransactions,
-        balanceEvolution = emptyList(),
+        balanceEvolution = balanceEvolution,
         expenseByCategory = emptyList(),
         incomeByCategory = emptyList(),
         cardSummary = CardSummary("0.00", "0.00", "5000.00", "5000.00")
@@ -301,6 +304,56 @@ class DashboardViewModelTest {
 
         val state = vm.uiState.value as DashboardUiState.Success
         assertEquals("CANCELLED", state.dashboard.recentTransactions[0].status)
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.6 — Evolução de saldo
+
+    @Test
+    fun `sucesso com evolução exibe series corretas`() = runTest {
+        val series = listOf(
+            BalanceSeries("acc1", "Conta Corrente", listOf(
+                BalancePoint("2026-10-01T00:00:00Z", "1000.00"),
+                BalancePoint("2026-10-02T00:00:00Z", "1500.00")
+            ))
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(balanceEvolution = series))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(1, state.dashboard.balanceEvolution.size)
+        assertEquals("acc1", state.dashboard.balanceEvolution[0].accountId)
+        assertEquals(2, state.dashboard.balanceEvolution[0].points.size)
+        assertEquals("1000.00", state.dashboard.balanceEvolution[0].points[0].balance)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sucesso com evolução vazia não quebra`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(balanceEvolution = emptyList()))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertTrue(state.dashboard.balanceEvolution.isEmpty())
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `evolução com pontos vazios não quebra`() = runTest {
+        val series = listOf(
+            BalanceSeries("acc1", "Conta Corrente", emptyList())
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(balanceEvolution = series))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertTrue(state.dashboard.balanceEvolution[0].points.isEmpty())
         Dispatchers.resetMain()
     }
 }
