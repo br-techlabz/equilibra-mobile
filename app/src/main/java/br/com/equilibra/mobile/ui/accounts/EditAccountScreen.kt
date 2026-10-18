@@ -43,6 +43,7 @@ import br.com.equilibra.mobile.domain.util.MoneyFormatter
 fun EditAccountScreen(
     onSuccess: () -> Unit,
     onBack: () -> Unit,
+    onReconcile: () -> Unit = {},
     viewModel: EditAccountViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -123,6 +124,16 @@ fun EditAccountScreen(
             } else {
                 Text(if (isActive) "Desativar conta" else "Ativar conta")
             }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onReconcile,
+            enabled = !state.isLoading && !state.isToggling,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Reconciliar saldo")
         }
 
         Spacer(modifier = Modifier.height(12.dp))

@@ -25,6 +25,7 @@ import androidx.navigation.navArgument
 import br.com.equilibra.mobile.ui.accounts.AccountsScreen
 import br.com.equilibra.mobile.ui.accounts.CreateAccountScreen
 import br.com.equilibra.mobile.ui.accounts.EditAccountScreen
+import br.com.equilibra.mobile.ui.accounts.ReconcileAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
 import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
@@ -135,9 +136,20 @@ private fun MainTabsNavHost(
         composable(
             route = "accounts/{accountId}/edit",
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
-        ) {
+        ) { entry ->
+            val accountId = entry.arguments?.getString("accountId").orEmpty()
             EditAccountScreen(
                 onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
+                onReconcile = { navController.navigate("accounts/$accountId/reconcile") }
+            )
+        }
+
+        composable(
+            route = "accounts/{accountId}/reconcile",
+            arguments = listOf(navArgument("accountId") { type = NavType.StringType })
+        ) {
+            ReconcileAccountScreen(
                 onBack = { navController.popBackStack() }
             )
         }
