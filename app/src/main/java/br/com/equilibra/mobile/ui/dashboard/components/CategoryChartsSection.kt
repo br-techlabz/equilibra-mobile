@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,27 +26,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
-import com.github.mikephil.charting.charts.HorizontalBarChart
 import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.formatter.PercentFormatter
 import java.math.BigDecimal
 
 /**
- * Seção de gráficos por categoria (Task 2.7).
+ * Seção de gráficos por categoria (Task 2.7) — formato pizza.
  *
  * - Dados agregados da API: expenseByCategory e incomeByCategory
  * - Permite distinguir despesa/receita (cores: vermelho para despesa, verde para receita)
  * - Inclui legenda, cores semânticas acessíveis e fallback quando não houver categorias
- * - Barras horizontais + rosca (PieChart) opcional — adaptativo à largura
- * - Usa MPAndroidChart via AndroidView (Compose)
+ * - Pizza (PieChart) via MPAndroidChart + AndroidView — adapta-se à largura
  */
 @Composable
 fun CategoryChartsSection(
@@ -158,81 +150,66 @@ private fun CategoryChartCard(
             )
         }
 
-        val chartHeight = if (categories.size <= 3) 180.dp else 240.dp
-
         AndroidView(
             factory = { ctx ->
-                val chart = HorizontalBarChart(ctx).apply {
+                PieChart(ctx).apply {
                     description.isEnabled = false
+                    isDrawHoleEnabled = true
+                    holeRadius = 42f
+                    transparentCircleRadius = 46f
+                    setHoleColor(AndroidColor.TRANSPARENT)
+                    setTransparentCircleColor(AndroidColor.TRANSPARENT)
+                    setTransparentCircleAlpha(0)
                     legend.isEnabled = false
-                    setTouchEnabled(true)
-                    isDragEnabled = true
-                    setScaleEnabled(true)
-                    setPinchZoom(false)
-                    setBackgroundColor(AndroidColor.TRANSPARENT)
-                    setFitBars(true)
-
-                    // Eixo X (categorias)
-                    xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    xAxis.textColor = AndroidColor.GRAY
-                    xAxis.textSize = 9f
-                    xAxis.granularity = 1f
-                    xAxis.setDrawGridLines(false)
-                    xAxis.labelRotationAngle = 0f
-                    xAxis.setCenterAxisLabels(false)
-
-                    // Eixo Y (valores)
-                    axisLeft.textColor = AndroidColor.GRAY
-                    axisLeft.textSize = 9f
-                    axisLeft.setDrawGridLines(true)
-                    axisLeft.gridColor = AndroidColor.LTGRAY
-                    axisLeft.axisMinimum = 0f
-                    axisLeft.valueFormatter = object : ValueFormatter() {
-                        override fun getFormattedValue(value: Float): String {
-                            return MoneyFormatter.format(value.toBigDecimal().toString())
-                        }
-                    }
-                    axisRight.isEnabled = false
+                    setUsePercentValues(true)
+                    setEntryLabelColor(AndroidColor.WHITE)
+                    setEntryLabelTextSize(11f)
+                    isRotationEnabled = true
+                    isHighlightPerTapEnabled = true
+                    setExtraOffsets(12f, 12f, 12f, 12f)
+                    animateY(600)
                 }
-                chart
             },
             update = { chart ->
-                val labels = categories.map { it.categoryName }
-                val entries = categories.mapIndexed { index, cat ->
+                val entries = categories.map { cat ->
                     val amount = try {
                         BigDecimal(cat.amount).toFloat()
                     } catch (_: Exception) {
                         0f
                     }
-                    BarEntry(index.toFloat(), amount)
+                    PieEntry(amount, cat.categoryName)
                 }
 
-                val dataSet = BarDataSet(entries, if (isExpense) "Despesa" else "Receita").apply {
+                val dataSet = PieDataSet(entries, if (isExpense) "Despesa" else "Receita").apply {
+                    sliceSpace = 2f
+                    selectionShift = 6f
                     setColors(colors.take(categories.size))
-                    valueTextColor = AndroidColor.GRAY
-                    valueTextSize = 9f
-                    valueFormatter = object : ValueFormatter() {
-                        override fun getBarLabel(entry: BarEntry?): String {
-                            if (entry == null) return ""
-                            return MoneyFormatter.format(entry.y.toBigDecimal().toString())
-                        }
-                    }
+                    valueTextColor = AndroidColor.WHITE
+                    valueTextSize = 11f
+                    valueFormatter = PercentFormatter(chart)
+                    // valor dentro da fatia em percentual; legenda externa mostra R$
                 }
 
-                chart.xAxis.valueFormatter = IndexAxisValueFormatter(labels)
-                chart.xAxis.labelCount = categories.size
-                chart.data = BarData(dataSet).apply {
-                    barWidth = 0.6f
+                chart.data = PieData(dataSet).apply {
+                    setValueTextColor(AndroidColor.WHITE)
+                    setValueTextSize(11f)
                 }
+                // texto central com total
+                val total = categories.fold(BigDecimal.ZERO) { acc, cat ->
+                    acc + MoneyFormatter.parse(cat.amount)
+                }
+                chart.centerText = MoneyFormatter.format(total.toString())
+                chart.setCenterTextSize(13f)
+                chart.setCenterTextColor(AndroidColor.DKGRAY)
                 chart.invalidate()
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(chartHeight)
+                .height(240.dp)
                 .padding(8.dp)
         )
 
-        // Legenda manual (cores + nome + valor)
+        // Legenda manual (cores + nome + valor) — mantém consistência e acessibilidade
         CategoryLegend(categories = categories, colors = colors)
     }
 }
@@ -265,12 +242,7 @@ private fun CategoryLegend(
                             .size(12.dp)
                             .padding(1.dp)
                             .semantics { contentDescription = cat.categoryName }
-                            .then(
-                                // Cor do círculo — usamos Canvas simples
-                                Modifier
-                            )
                     ) {
-                        // Círculo colorido via Card
                         androidx.compose.material3.Surface(
                             modifier = Modifier.size(10.dp),
                             shape = androidx.compose.foundation.shape.CircleShape,
