@@ -27,18 +27,20 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.ui.dashboard.components.AccountBalancesSection
 import br.com.equilibra.mobile.ui.dashboard.components.BalanceEvolutionChart
+import br.com.equilibra.mobile.ui.dashboard.components.CategoryChartsSection
 import br.com.equilibra.mobile.ui.dashboard.components.RecentTransactionsSection
 import br.com.equilibra.mobile.ui.dashboard.components.SummaryCards
 
 /**
- * Tela de Dashboard (Task 2.6).
+ * Tela de Dashboard (Task 2.7).
  *
  * Seções:
  * - SummaryCards (Task 2.3)
  * - AccountBalancesSection (Task 2.4) — saldos por conta
  * - RecentTransactionsSection (Task 2.5) — feed de transações recentes
- * - BalanceEvolutionChart (Task 2.6) — gráfico temporal via MPAndroidChart
- * - As Tasks 2.7–2.10 implementarão as demais seções
+ * - BalanceEvolutionChart (Task 2.6) — gráfico temporal
+ * - CategoryChartsSection (Task 2.7) — despesas/receitas por categoria
+ * - As Tasks 2.8–2.10 implementarão as demais seções
  */
 @Composable
 fun DashboardScreen(
@@ -63,6 +65,8 @@ fun DashboardScreen(
                 accounts = s.dashboard.accounts,
                 transactions = s.dashboard.recentTransactions,
                 balanceEvolution = s.dashboard.balanceEvolution,
+                expenseByCategory = s.dashboard.expenseByCategory,
+                incomeByCategory = s.dashboard.incomeByCategory,
                 onAccountClick = onAccountClick,
                 onTransactionClick = onTransactionClick
             )
@@ -103,6 +107,8 @@ private fun SuccessContent(
     accounts: List<br.com.equilibra.mobile.domain.model.dashboard.AccountBalance>,
     transactions: List<br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction>,
     balanceEvolution: List<br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries>,
+    expenseByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
+    incomeByCategory: List<br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense>,
     onAccountClick: (String) -> Unit,
     onTransactionClick: (String) -> Unit
 ) {
@@ -142,7 +148,12 @@ private fun SuccessContent(
             series = balanceEvolution
         )
 
-        // Seções futuras (Tasks 2.7–2.10) serão adicionadas aqui
+        CategoryChartsSection(
+            expenseByCategory = expenseByCategory,
+            incomeByCategory = incomeByCategory
+        )
+
+        // Seções futuras (Tasks 2.8–2.10) serão adicionadas aqui
     }
 }
 

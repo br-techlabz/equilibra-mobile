@@ -6,6 +6,7 @@ import br.com.equilibra.mobile.domain.model.dashboard.AccountBalance
 import br.com.equilibra.mobile.domain.model.dashboard.BalancePoint
 import br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries
 import br.com.equilibra.mobile.domain.model.dashboard.CardSummary
+import br.com.equilibra.mobile.domain.model.dashboard.CategoryExpense
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriod
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary
@@ -34,15 +35,17 @@ class DashboardViewModelTest {
     private fun successDashboard(
         accounts: List<AccountBalance> = emptyList(),
         recentTransactions: List<RecentTransaction> = emptyList(),
-        balanceEvolution: List<BalanceSeries> = emptyList()
+        balanceEvolution: List<BalanceSeries> = emptyList(),
+        expenseByCategory: List<CategoryExpense> = emptyList(),
+        incomeByCategory: List<CategoryExpense> = emptyList()
     ) = Dashboard(
         period = DashboardPeriod("2026-10-01T00:00:00Z", "2026-10-31T23:59:59Z"),
         summary = DashboardSummary("1000.00", "500.00", "500.00", "5000.00"),
         accounts = accounts,
         recentTransactions = recentTransactions,
         balanceEvolution = balanceEvolution,
-        expenseByCategory = emptyList(),
-        incomeByCategory = emptyList(),
+        expenseByCategory = expenseByCategory,
+        incomeByCategory = incomeByCategory,
         cardSummary = CardSummary("0.00", "0.00", "5000.00", "5000.00")
     )
 
@@ -354,6 +357,77 @@ class DashboardViewModelTest {
 
         val state = vm.uiState.value as DashboardUiState.Success
         assertTrue(state.dashboard.balanceEvolution[0].points.isEmpty())
+        Dispatchers.resetMain()
+    }
+
+    // Task 2.7 — Gráficos por categoria
+
+    @Test
+    fun `sucesso com categorias de despesa exibe lista correta`() = runTest {
+        val expenses = listOf(
+            CategoryExpense("Alimentação", "200.00"),
+            CategoryExpense("Transporte", "100.00")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(expenseByCategory = expenses))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(2, state.dashboard.expenseByCategory.size)
+        assertEquals("Alimentação", state.dashboard.expenseByCategory[0].categoryName)
+        assertEquals("200.00", state.dashboard.expenseByCategory[0].amount)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sucesso com categorias de receita exibe lista correta`() = runTest {
+        val incomes = listOf(
+            CategoryExpense("Salário", "1000.00"),
+            CategoryExpense("Investimentos", "200.00")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(incomeByCategory = incomes))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertEquals(2, state.dashboard.incomeByCategory.size)
+        assertEquals("Salário", state.dashboard.incomeByCategory[0].categoryName)
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `sucesso com categorias vazias não quebra`() = runTest {
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(expenseByCategory = emptyList(), incomeByCategory = emptyList()))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        assertTrue(state.dashboard.expenseByCategory.isEmpty())
+        assertTrue(state.dashboard.incomeByCategory.isEmpty())
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `totais de categorias batem com valores da API`() = runTest {
+        // Verifica que a soma dos valores corresponde (via BigDecimal)
+        val expenses = listOf(
+            CategoryExpense("A", "100.00"),
+            CategoryExpense("B", "200.00"),
+            CategoryExpense("C", "300.00")
+        )
+        coEvery { repository.getDashboard(any(), any()) } returns ApiResult.Success(successDashboard(expenseByCategory = expenses))
+
+        val vm = DashboardViewModel(repository)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value as DashboardUiState.Success
+        val total = state.dashboard.expenseByCategory.fold(java.math.BigDecimal.ZERO) { acc, cat ->
+            acc + java.math.BigDecimal(cat.amount)
+        }
+        assertEquals(java.math.BigDecimal("600.00"), total)
         Dispatchers.resetMain()
     }
 }
