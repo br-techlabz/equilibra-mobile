@@ -15,10 +15,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,6 +42,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.data.local.account.AccountEntity
 import br.com.equilibra.mobile.data.remote.dto.account.AssetAccountTypeDto
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
+import br.com.equilibra.mobile.ui.components.ListEmptyState
+import br.com.equilibra.mobile.ui.components.ListError
+import br.com.equilibra.mobile.ui.components.ListLoading
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,7 +70,7 @@ fun AccountsScreen(
             .semantics { contentDescription = "Tela de contas" }
     ) {
         when (val s = state) {
-            is AccountsUiState.Loading -> LoadingContent()
+            is AccountsUiState.Loading -> ListLoading("Carregando contas...")
             is AccountsUiState.Success -> SuccessContent(
                 accounts = s.accounts,
                 isRefreshing = s.isRefreshing,
@@ -77,7 +78,7 @@ fun AccountsScreen(
                 onAccountClick = onAccountClick,
                 onCreateClick = onCreateClick
             )
-            is AccountsUiState.Error -> ErrorContent(
+            is AccountsUiState.Error -> ListError(
                 message = s.message,
                 onRetry = { viewModel.refresh() }
             )
@@ -87,46 +88,6 @@ fun AccountsScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Carregando contas...",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, onRetry: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry) {
-            Text("Tentar novamente")
-        }
     }
 }
 
@@ -146,34 +107,13 @@ private fun SuccessContent(
                 onRefresh = onRefresh,
                 modifier = Modifier.fillMaxSize()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountBalanceWallet,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Nenhuma conta cadastrada",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Crie sua primeira conta para começar",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Button(onClick = onCreateClick) {
-                        Text("Criar conta")
-                    }
-                }
+                ListEmptyState(
+                    title = "Nenhuma conta cadastrada",
+                    subtitle = "Crie sua primeira conta para começar",
+                    actionLabel = "Criar conta",
+                    onAction = onCreateClick,
+                    icon = Icons.Default.AccountBalanceWallet
+                )
             }
         }
         return

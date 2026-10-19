@@ -13,13 +13,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -37,6 +36,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.data.local.category.CategoryEntity
+import br.com.equilibra.mobile.ui.components.ListEmptyState
+import br.com.equilibra.mobile.ui.components.ListError
+import br.com.equilibra.mobile.ui.components.ListLoading
 
 private fun applicabilityLabel(applicability: String): String = when (applicability) {
     "EXPENSE" -> "Despesa"
@@ -76,7 +78,7 @@ fun CategoriesScreen(
             .semantics { contentDescription = "Tela de categorias" }
     ) {
         when (val s = state) {
-            is CategoriesUiState.Loading -> LoadingContent()
+            is CategoriesUiState.Loading -> ListLoading("Carregando categorias...")
 
             is CategoriesUiState.Success -> SuccessContent(
                 categories = s.categories,
@@ -88,10 +90,13 @@ fun CategoriesScreen(
                 onToggleActive = { id -> viewModel.toggleActive(id) }
             )
 
-            is CategoriesUiState.Error -> ErrorContent(
+            is CategoriesUiState.Error -> ListError(
                 message = s.message,
-                canRetry = s.canRetry,
-                onRetry = { viewModel.refresh() }
+                onRetry = if (s.canRetry) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
             )
         }
 
@@ -99,52 +104,6 @@ fun CategoriesScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Carregando categorias...",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    canRetry: Boolean,
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error
-        )
-        if (canRetry) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("Tentar novamente")
-            }
-        }
     }
 }
 
@@ -188,31 +147,13 @@ private fun SuccessContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (categories.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Nenhuma categoria",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Crie sua primeira categoria para começar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onCreateClick) {
-                            Text("Criar primeira categoria")
-                        }
-                    }
-                }
+                ListEmptyState(
+                    title = "Nenhuma categoria",
+                    subtitle = "Crie sua primeira categoria para começar",
+                    actionLabel = "Criar primeira categoria",
+                    onAction = onCreateClick,
+                    icon = Icons.Default.Category
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),

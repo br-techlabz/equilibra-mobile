@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
@@ -36,6 +36,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import br.com.equilibra.mobile.data.local.tag.TagEntity
+import br.com.equilibra.mobile.ui.components.ListEmptyState
+import br.com.equilibra.mobile.ui.components.ListError
+import br.com.equilibra.mobile.ui.components.ListLoading
 
 /**
  * Task 3.12 — Tela de tags com sincronização Room-first.
@@ -69,7 +72,7 @@ fun TagsScreen(
             .semantics { contentDescription = "Tela de tags" }
     ) {
         when (val s = state) {
-            is TagsUiState.Loading -> LoadingContent()
+            is TagsUiState.Loading -> ListLoading("Carregando tags...")
 
             is TagsUiState.Success -> SuccessContent(
                 tags = s.tags,
@@ -80,10 +83,13 @@ fun TagsScreen(
                 onToggleActive = { id -> viewModel.toggleActive(id) }
             )
 
-            is TagsUiState.Error -> ErrorContent(
+            is TagsUiState.Error -> ListError(
                 message = s.message,
-                canRetry = s.canRetry,
-                onRetry = { viewModel.refresh() }
+                onRetry = if (s.canRetry) {
+                    { viewModel.refresh() }
+                } else {
+                    null
+                }
             )
         }
 
@@ -91,52 +97,6 @@ fun TagsScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-    }
-}
-
-@Composable
-private fun LoadingContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Carregando tags...",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun ErrorContent(
-    message: String,
-    canRetry: Boolean,
-    onRetry: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.error
-        )
-        if (canRetry) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("Tentar novamente")
-            }
-        }
     }
 }
 
@@ -179,31 +139,13 @@ private fun SuccessContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (tags.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Nenhuma tag",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Crie sua primeira tag para começar",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onCreateClick) {
-                            Text("Criar primeira tag")
-                        }
-                    }
-                }
+                ListEmptyState(
+                    title = "Nenhuma tag",
+                    subtitle = "Crie sua primeira tag para começar",
+                    actionLabel = "Criar primeira tag",
+                    onAction = onCreateClick,
+                    icon = Icons.Default.Tag
+                )
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
