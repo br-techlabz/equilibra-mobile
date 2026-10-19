@@ -44,6 +44,7 @@ import br.com.equilibra.mobile.ui.transactions.EditIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
 import br.com.equilibra.mobile.ui.transactions.IncomesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
+import br.com.equilibra.mobile.ui.transactions.TransferCreateScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
@@ -212,6 +213,13 @@ private fun MainTabsNavHost(
             )
         }
 
+        composable("transfers/create") {
+            TransferCreateScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable("incomes/create") {
             CreateIncomeScreen(
                 onSuccess = { navController.popBackStack() },
@@ -276,6 +284,7 @@ private fun MainTabsNavHost(
                 onTags = { navController.navigate("tags") },
                 onExpenses = { navController.navigate("expenses") },
                 onIncomes = { navController.navigate("incomes") },
+                onTransfers = { navController.navigate("transfers/create") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }
