@@ -40,6 +40,7 @@ import br.com.equilibra.mobile.ui.reports.ReportsScreen
 import br.com.equilibra.mobile.ui.transactions.CreateExpenseScreen
 import br.com.equilibra.mobile.ui.transactions.EditExpenseScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
+import br.com.equilibra.mobile.ui.transactions.IncomesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -202,6 +203,10 @@ private fun MainTabsNavHost(
             )
         }
 
+        composable("incomes") {
+            IncomesScreen()
+        }
+
         composable("expenses/create") {
             CreateExpenseScreen(
                 onSuccess = { navController.popBackStack() },
@@ -248,6 +253,7 @@ private fun MainTabsNavHost(
                 onCategories = { navController.navigate("categories") },
                 onTags = { navController.navigate("tags") },
                 onExpenses = { navController.navigate("expenses") },
+                onIncomes = { navController.navigate("incomes") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }

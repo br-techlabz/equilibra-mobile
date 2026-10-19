@@ -500,6 +500,42 @@ class TransactionRepositoryTest {
         assertEquals(500, (result as ApiResult.HttpError).code)
     }
 
+    // ---------- paginação (lista de receitas — Task 4.7) ----------
+
+    @Test
+    fun listIncomesPaginadoRetornaMapeadoSemPersistir() = runTest {
+        coEvery { incomeApi.list(1, 20, true) } returns Response.success(
+            IncomePageResponseDto(
+                content = listOf(incomeDto(id = "p1", description = "Salário")),
+                page = 1, size = 20, totalElements = 33, totalPages = 2
+            )
+        )
+
+        val result = repository.listIncomes(page = 1, includeCancelled = true)
+
+        assertTrue(result is ApiResult.Success)
+        val txPage = (result as ApiResult.Success).data
+        assertEquals(1, txPage.page)
+        assertEquals(2, txPage.totalPages)
+        assertEquals(33L, txPage.totalElements)
+        assertEquals("INCOME", txPage.items[0].type)
+        // Receita: conta = destino
+        assertEquals("acc-2", txPage.items[0].destinationAccountId)
+        assertEquals(null, txPage.items[0].sourceAccountId)
+        assertEquals(0, dao.getAll().size) // paginação não escreve no cache
+        coVerify { incomeApi.list(1, 20, true) }
+    }
+
+    @Test
+    fun listIncomesErroNaoMexeNoCache() = runTest {
+        coEvery { incomeApi.list(any(), any(), any()) } throws IOException("offline")
+
+        val result = repository.listIncomes(page = 0, includeCancelled = false)
+
+        assertTrue(result is ApiResult.NetworkError)
+        assertEquals(0, dao.getAll().size)
+    }
+
     companion object {
         private var seq = 0
     }

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tag
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +76,7 @@ fun MoreScreen(
     onCategories: () -> Unit = {},
     onTags: () -> Unit = {},
     onExpenses: () -> Unit = {},
+    onIncomes: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val comingSoonMessage = "Em breve"
@@ -104,6 +106,12 @@ fun MoreScreen(
             label = "Despesas",
             subtitle = "Listar despesas",
             onClick = onExpenses
+        ),
+        MoreMenuItem(
+            icon = Icons.Default.TrendingUp,
+            label = "Receitas",
+            subtitle = "Listar receitas",
+            onClick = onIncomes
         ),
         MoreMenuItem(
             icon = Icons.Default.Notifications,

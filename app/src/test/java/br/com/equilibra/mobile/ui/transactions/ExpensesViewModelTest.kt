@@ -84,7 +84,7 @@ class ExpensesViewModelTest {
         val vm = vmWithSuccess(ApiResult.Success(page(listOf(entity("1"), entity("2")), page = 0, totalPages = 2, totalElements = 3)))
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertEquals(listOf("1", "2"), state.items.map { it.id })
         assertEquals(0, state.page)
         assertEquals(2, state.totalPages)
@@ -97,7 +97,7 @@ class ExpensesViewModelTest {
         val vm = vmWithSuccess(ApiResult.Success(page(emptyList())))
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertTrue(state.items.isEmpty())
         assertTrue(state.endReached)
     }
@@ -108,7 +108,7 @@ class ExpensesViewModelTest {
         val vm = vmWithSuccess(ApiResult.Success(page(listOf(entity("1")), page = 1, totalPages = 3, totalElements = 45)))
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertFalse(state.endReached)
     }
 
@@ -127,7 +127,7 @@ class ExpensesViewModelTest {
         vm.loadMore()
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertEquals(listOf("1", "2"), state.items.map { it.id })
         assertEquals(1, state.page)
         assertTrue(state.endReached) // página 1 de 2 → fim
@@ -153,7 +153,7 @@ class ExpensesViewModelTest {
         vm.refresh()
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertEquals(0, state.page)
         assertFalse(state.isRefreshing)
         assertNull(state.error)
@@ -168,7 +168,7 @@ class ExpensesViewModelTest {
         vm.toggleIncludeCancelled()
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertTrue(state.includeCancelled)
         coVerify { repository.listExpenses(0, true) }
     }
@@ -178,7 +178,7 @@ class ExpensesViewModelTest {
         val vm = vmWithSuccess(ApiResult.HttpError(500, null, null))
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Error
+        val state = vm.uiState.value as TransactionsListUiState.Error
         assertTrue(state.message.contains("500"))
         assertTrue(state.canRetry)
     }
@@ -188,7 +188,7 @@ class ExpensesViewModelTest {
         val vm = vmWithSuccess(ApiResult.NetworkError(java.io.IOException("offline")))
         advanceUntilIdle()
 
-        assertTrue(vm.uiState.value is ExpensesUiState.Error)
+        assertTrue(vm.uiState.value is TransactionsListUiState.Error)
     }
 
     @Test
@@ -201,7 +201,7 @@ class ExpensesViewModelTest {
         vm.refresh()
         advanceUntilIdle()
 
-        val state = vm.uiState.value as ExpensesUiState.Success
+        val state = vm.uiState.value as TransactionsListUiState.Success
         assertEquals(1, state.items.size)
         assertTrue(state.error != null)
         assertFalse(state.isRefreshing)

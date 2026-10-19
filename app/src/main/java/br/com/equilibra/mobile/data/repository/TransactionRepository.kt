@@ -76,6 +76,28 @@ class TransactionRepository @Inject constructor(
         is ApiResult.UnknownError -> result
     }
 
+    /**
+     * Lista paginada de receitas (Task 4.7) — mesmo contrato de /expenses;
+     * conta da receita é o destino (destinationAccountId).
+     */
+    suspend fun listIncomes(
+        page: Int,
+        includeCancelled: Boolean,
+        size: Int = PAGE_SIZE_LIST
+    ): ApiResult<TransactionPage> = when (val result = safeApiCall { incomeApi.list(page, size, includeCancelled) }) {
+        is ApiResult.Success -> ApiResult.Success(
+            TransactionPage(
+                items = result.data.content.map { it.like().toEntity(TYPE_INCOME, syncedAt = null) },
+                page = result.data.page,
+                totalPages = result.data.totalPages,
+                totalElements = result.data.totalElements
+            )
+        )
+        is ApiResult.HttpError -> result
+        is ApiResult.NetworkError -> result
+        is ApiResult.UnknownError -> result
+    }
+
     // Sincronização
 
     /**

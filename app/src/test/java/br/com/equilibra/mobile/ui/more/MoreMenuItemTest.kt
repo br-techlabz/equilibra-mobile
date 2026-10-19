@@ -47,13 +47,14 @@ class MoreMenuItemTest {
         // Este teste documenta o comportamento esperado da tela Mais:
         // itens entregues (Categorias, Tags) + logout habilitados; o resto é "Em breve"
         val comingSoonItems = listOf("Perfil", "Notificações", "Segurança", "Configurações", "Ajuda", "Privacidade")
-        val enabledItems = listOf("Categorias", "Tags", "Despesas", "Sair da conta")
+        val enabledItems = listOf("Categorias", "Tags", "Despesas", "Receitas", "Sair da conta")
 
         assertEquals(6, comingSoonItems.size)
-        assertEquals(4, enabledItems.size)
+        assertEquals(5, enabledItems.size)
         assertTrue(enabledItems.contains("Sair da conta"))
         assertTrue(enabledItems.contains("Categorias"))
         assertTrue(enabledItems.contains("Tags"))
         assertTrue(enabledItems.contains("Despesas"))
+        assertTrue(enabledItems.contains("Receitas"))
     }
 }
