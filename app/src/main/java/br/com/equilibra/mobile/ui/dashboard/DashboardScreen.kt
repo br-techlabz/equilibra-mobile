@@ -66,7 +66,6 @@ fun DashboardScreen(
             is DashboardUiState.Loading -> LoadingContent()
 
             is DashboardUiState.Success -> SuccessContent(
-                periodLabel = s.periodLabel,
                 summary = s.dashboard.summary,
                 accounts = s.dashboard.accounts,
                 transactions = s.dashboard.recentTransactions,
@@ -116,7 +115,6 @@ private fun LoadingContent() {
 
 @Composable
 private fun SuccessContent(
-    periodLabel: String,
     summary: br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary,
     accounts: List<br.com.equilibra.mobile.domain.model.dashboard.AccountBalance>,
     transactions: List<br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction>,
@@ -148,13 +146,6 @@ private fun SuccessContent(
             selectedPeriod = selectedPeriod,
             onPeriodTypeSelected = onPeriodTypeSelected,
             onCustomPeriodSelected = onCustomPeriodSelected
-        )
-
-        Text(
-            text = periodLabel,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.semantics { contentDescription = "Período: $periodLabel" }
         )
 
         SummaryCards(summary = summary)
