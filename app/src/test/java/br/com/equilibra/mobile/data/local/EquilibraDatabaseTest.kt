@@ -32,8 +32,8 @@ class EquilibraDatabaseTest {
         val dao = db.openHelper
         assertTrue(dao.readableDatabase.isOpen)
 
-        // Versão atual = 4 (Task 3.11: contas + categorias + tags)
-        assertEquals(4, EquilibraDatabase.DATABASE_VERSION)
+        // Versão atual = 5 (Task 4.1: + transações)
+        assertEquals(5, EquilibraDatabase.DATABASE_VERSION)
         assertEquals("equilibra.db", EquilibraDatabase.DATABASE_NAME)
 
         db.close()
@@ -45,8 +45,8 @@ class EquilibraDatabaseTest {
     }
 
     @Test
-    fun databaseVersionIsFour() {
-        assertEquals(4, EquilibraDatabase.DATABASE_VERSION)
+    fun databaseVersionIsFive() {
+        assertEquals(5, EquilibraDatabase.DATABASE_VERSION)
     }
 
     @Test
@@ -182,6 +182,52 @@ class EquilibraDatabaseTest {
             assertTrue("Tabela categories deve continuar existindo", c.count > 0)
         }
         dbV4.close()
+        context.getDatabasePath(dbName)?.delete()
+    }
+
+    @Test
+    fun migration4To5CreatesTransactionsTable() {
+        val dbName = "test-migration-4-5.db"
+        context.getDatabasePath(dbName)?.delete()
+        // Passo 1: cria fisicamente um DB v4 (contas + categorias + tags)
+        run {
+            val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+                androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                    .name(dbName)
+                    .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(4) {
+                        override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `initialBalance` TEXT NOT NULL, `currentBalance` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `categories` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `applicability` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `tags` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL("CREATE INDEX IF NOT EXISTS `index_tags_name` ON `tags` (`name`)")
+                        }
+                        override fun onUpgrade(db: androidx.sqlite.db.SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+                    }).build()
+            )
+            helper.writableDatabase.close()
+            helper.close()
+        }
+        // Passo 2: abre como v5 com migrations
+        val dbV5 = Room.databaseBuilder(
+            context,
+            EquilibraDatabase::class.java,
+            dbName
+        ).allowMainThreadQueries().addMigrations(*Migrations.ALL).build()
+        dbV5.openHelper.writableDatabase
+        dbV5.openHelper.readableDatabase.query("SELECT name FROM sqlite_master WHERE type='table' AND name='transactions'").use { c ->
+            assertTrue("Tabela transactions deve existir após MIGRATION_4_5", c.count > 0)
+        }
+        // Dados da v4 devem sobreviver
+        dbV5.openHelper.readableDatabase.query("SELECT name FROM sqlite_master WHERE type='table' AND name='tags'").use { c ->
+            assertTrue("Tabela tags deve continuar existindo", c.count > 0)
+        }
+        dbV5.close()
         context.getDatabasePath(dbName)?.delete()
     }
 

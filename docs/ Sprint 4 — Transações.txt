@@ -1,0 +1,145 @@
+# Sprint 4 — Transações
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 4.1 — TransactionEntity e DAO
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.1 — TransactionEntity e DAO** do Equilibra Mobile. Objetivo: Criar cache das últimas ~100 transações e consultas por tipo. Inclua tipo, descrição, data, valor como String decimal, categoria, contas, notas, status e syncedAt; considere IDs e campos opcionais; não tente armazenar páginas ilimitadas.
+>
+> Critérios de aceite: Consultas recentes/tipo e operações locais testadas.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.2 — ExpenseApi, IncomeApi e TransferApi
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.2 — ExpenseApi, IncomeApi e TransferApi** do Equilibra Mobile. Objetivo: Criar serviços Retrofit e DTOs para despesas, receitas e transferências. Confirme payloads, paginação, filtros, cancelamento e enums no backend; não presuma que endpoints compartilham o mesmo DTO sem validar.
+>
+> Critérios de aceite: Serviços mapeiam o contrato real; testes de serialização e erros.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.3 — TransactionRepository
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.3 — TransactionRepository** do Equilibra Mobile. Objetivo: Unificar acesso remoto e cache de até ~100 transações. API é fonte da verdade; cache para leitura rápida e lista recente; escritas remotas precedem atualização Room; histórico unificado continua sem cache.
+>
+> Critérios de aceite: Sincronização determinística e testes de sucesso/falha.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.4 — Formulário reutilizável de transação
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.4 — Formulário reutilizável de transação** do Equilibra Mobile. Objetivo: Criar formulário base para descrição, valor, data, conta, categoria, tags e notas. Componha campos reutilizáveis com validação e estado hoisted; permita configuração de campos por tipo; use seletores da Sprint 3 e formatação monetária sem arredondamentos indevidos.
+>
+> Critérios de aceite: Formulário serve despesas e receitas; acessível e testável.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.5 — Lista de despesas
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.5 — Lista de despesas** do Equilibra Mobile. Objetivo: Criar lista paginada com filtros e refresh. Use paginação real do backend; filtros por período, status, conta, categoria e tags quando suportados; não carregar todas as páginas de uma vez.
+>
+> Critérios de aceite: Paginação e filtros corretos; estados loading/vazio/erro/refresh.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.6 — Criar/editar despesa
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.6 — Criar/editar despesa** do Equilibra Mobile. Objetivo: Implementar formulário e persistência remota de despesas. Suportar campos do contrato, edição quando API permitir e associação de tags; validar valor positivo e conta/categoria válidas.
+>
+> Critérios de aceite: Sucesso atualiza Room; falha não altera cache; testes de ViewModel.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.7 — Lista de receitas
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.7 — Lista de receitas** do Equilibra Mobile. Objetivo: Criar lista paginada com filtros, incluindo canceladas. Respeite status e filtros reais; diferencie visualmente receita ativa/cancelada e implemente paginação.
+>
+> Critérios de aceite: Filtro de canceladas funciona conforme API; estados completos.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.8 — Criar/editar receita
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.8 — Criar/editar receita** do Equilibra Mobile. Objetivo: Implementar formulário de receita com atualização do Room após sucesso. Reutilize formulário base; categorias compatíveis com INCOME/BOTH; validar e mapear resposta da API.
+>
+> Critérios de aceite: Criar/editar funciona e tem testes de validação/erro.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.9 — Transferência entre contas
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.9 — Transferência entre contas** do Equilibra Mobile. Objetivo: Criar tela para conta origem, destino, valor, data e descrição se suportada. Impedir origem igual ao destino; usar contrato real; não modelar transferência como despesa+receita local; atualizar cache após sucesso.
+>
+> Critérios de aceite: Validações e envio correto; saldo fica sob responsabilidade do backend.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.10 — Cancelar transação
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.10 — Cancelar transação** do Equilibra Mobile. Objetivo: Adicionar cancelamento para despesa, receita e transferência. Use endpoints específicos e status real; confirmação para ação destrutiva; evitar duplo envio e sincronizar Room após sucesso.
+>
+> Critérios de aceite: Cancelamento refletido em listas/detalhes; erros não corrompem cache.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.11 — Histórico unificado
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.11 — Histórico unificado** do Equilibra Mobile. Objetivo: Criar tela com /transactions e filtros combinados sem cache. Implemente paginação e filtros tipo/status/período/conta/categoria/tags; API sempre fonte da tela; serialização de parâmetros conforme contrato.
+>
+> Critérios de aceite: Filtros combinados e paginação corretos; sem leitura/escrita Room.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.12 — Detalhe da transação
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.12 — Detalhe da transação** do Equilibra Mobile. Objetivo: Exibir dados completos, status e seção de anexos. Use navegação por ID e carregue detalhes reais; apresente ações disponíveis conforme tipo/status; conectar tela de anexos quando sprint 5 estiver pronta, com estado provisório claro se ainda não estiver.
+>
+> Critérios de aceite: Detalhes corretos; ações autorizadas; estados de erro/loading.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 4.13 — Formatação financeira pt-BR
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 4.13 — Formatação financeira pt-BR** do Equilibra Mobile. Objetivo: Padronizar R$, datas dd/MM/yyyy e cores semânticas. Centralize formatadores; trate null, valores negativos e timezone; não dependa de cores sozinhas para indicar tipo e preserve acessibilidade em tema claro/escuro.
+>
+> Critérios de aceite: Componentes financeiros usam os mesmos formatadores; testes de formatação.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
