@@ -47,6 +47,17 @@ interface TransactionDao {
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("DELETE FROM transactions WHERE type = :type")
+    suspend fun deleteByType(type: String)
+
+    @Query("DELETE FROM transactions WHERE type = :type AND id NOT IN (:keepIds)")
+    suspend fun deleteByTypeNotIn(type: String, keepIds: List<String>)
+
+    /** Remove de um tipo fora da lista; vazio → limpa só aquele tipo. */
+    suspend fun replaceByTypeSafe(type: String, keepIds: List<String>) {
+        if (keepIds.isEmpty()) deleteByType(type) else deleteByTypeNotIn(type, keepIds)
+    }
+
     @Query("DELETE FROM transactions")
     suspend fun clearAll()
 
