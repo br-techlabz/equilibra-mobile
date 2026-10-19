@@ -168,4 +168,38 @@ class EditIncomeViewModelTest {
         assertNotNull(vm.formState.value.amountError)
         coVerify(exactly = 0) { repository.updateIncome(any(), any(), any(), any(), any(), any(), any(), any()) }
     }
+
+    // ---------- cancelamento (Task 4.10) ----------
+
+    @Test
+    fun `cancel chama api e marca cancelada na tela`() = runTest {
+        coEvery { repository.getByIdCached(incomeId) } returns cached()
+        coEvery { repository.refreshById("INCOME", incomeId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelIncome(incomeId) } returns
+            ApiResult.Success(cached(status = "CANCELLED"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.cancelIncome(incomeId) }
+        assertFalse(vm.editable.value)
+        assertNotNull(vm.notice.value)
+    }
+
+    @Test
+    fun `cancel com erro preserva status e expoe mensagem`() = runTest {
+        coEvery { repository.getByIdCached(incomeId) } returns cached()
+        coEvery { repository.refreshById("INCOME", incomeId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelIncome(incomeId) } returns ApiResult.HttpError(409, null, null)
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        assertTrue(vm.editable.value)
+        assertTrue(vm.generalError.value!!.contains("409"))
+    }
 }

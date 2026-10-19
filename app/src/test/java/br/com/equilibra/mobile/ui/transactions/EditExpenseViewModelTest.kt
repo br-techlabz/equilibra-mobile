@@ -19,6 +19,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -191,5 +192,87 @@ class EditExpenseViewModelTest {
 
         assertNotNull(vm.formState.value.descriptionError)
         coVerify(exactly = 0) { repository.updateExpense(any(), any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    // ---------- cancelamento (Task 4.10) ----------
+
+    @Test
+    fun `cancel chama api e marca cancelada na tela`() = runTest {
+        coEvery { repository.getByIdCached(expenseId) } returns cached()
+        coEvery { repository.refreshById("EXPENSE", expenseId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelExpense(expenseId) } returns
+            ApiResult.Success(cached(status = "CANCELLED"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.cancelExpense(expenseId) }
+        assertFalse(vm.editable.value)
+        assertNotNull(vm.notice.value) // aviso de sucesso (não é erro)
+        assertNull(vm.generalError.value)
+    }
+
+    @Test
+    fun `cancel duplo nao repete envio`() = runTest {
+        coEvery { repository.getByIdCached(expenseId) } returns cached()
+        coEvery { repository.refreshById("EXPENSE", expenseId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelExpense(expenseId) } returns
+            ApiResult.Success(cached(status = "CANCELLED"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        vm.cancel() // segundo toque imediato
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.cancelExpense(expenseId) }
+    }
+
+    @Test
+    fun `cancel ja cancelada nao chama api`() = runTest {
+        coEvery { repository.getByIdCached(expenseId) } returns cached(status = "CANCELLED")
+        coEvery { repository.refreshById("EXPENSE", expenseId) } returns
+            ApiResult.Success(cached(status = "CANCELLED"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) { repository.cancelExpense(any()) }
+    }
+
+    @Test
+    fun `cancel com erro preserva status editavel`() = runTest {
+        coEvery { repository.getByIdCached(expenseId) } returns cached()
+        coEvery { repository.refreshById("EXPENSE", expenseId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelExpense(expenseId) } returns ApiResult.HttpError(409, null, null)
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        assertTrue(vm.editable.value) // não mudou para cancelada
+        assertTrue(vm.generalError.value!!.contains("409"))
+        assertNull(vm.notice.value)
+    }
+
+    @Test
+    fun `cancel com erro de rede nao altera cache`() = runTest {
+        coEvery { repository.getByIdCached(expenseId) } returns cached()
+        coEvery { repository.refreshById("EXPENSE", expenseId) } returns ApiResult.Success(cached())
+        coEvery { repository.cancelExpense(expenseId) } returns
+            ApiResult.NetworkError(java.io.IOException("offline"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.cancel()
+        advanceUntilIdle()
+
+        assertTrue(vm.editable.value)
+        assertTrue(vm.generalError.value!!.contains("Sem conexão"))
     }
 }

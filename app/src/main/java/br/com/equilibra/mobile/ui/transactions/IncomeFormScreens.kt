@@ -55,6 +55,8 @@ fun EditIncomeScreen(
     val generalError by viewModel.generalError.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val editable by viewModel.editable.collectAsState()
+    val isCancelling by viewModel.isCancelling.collectAsState()
+    val notice by viewModel.notice.collectAsState()
 
     TransactionFormScaffold(
         title = "Editar receita",
@@ -76,6 +78,10 @@ fun EditIncomeScreen(
         onSuccess = onSuccess,
         onBack = onBack,
         editable = editable,
-        screenDescription = "Tela de editar receita"
+        screenDescription = "Tela de editar receita",
+        onCancelTransaction = viewModel::cancel,
+        isCancelling = isCancelling,
+        notice = notice,
+        onClearNotice = viewModel::clearNotice
     )
 }

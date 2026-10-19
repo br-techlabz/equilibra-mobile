@@ -35,4 +35,7 @@ class EditExpenseViewModel @Inject constructor(
         notes = state.notes.ifBlank { null },
         tagIds = tagIds
     )
+
+    override suspend fun submitCancel(id: String): ApiResult<TransactionEntity> =
+        repository.cancelExpense(id)
 }

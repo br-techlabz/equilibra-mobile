@@ -117,6 +117,13 @@ abstract class BaseEditTransactionViewModel(
     private val _editable = MutableStateFlow(true)
     val editable: StateFlow<Boolean> = _editable.asStateFlow()
 
+    private val _isCancelling = MutableStateFlow(false)
+    val isCancelling: StateFlow<Boolean> = _isCancelling.asStateFlow()
+
+    /** Aviso não-erro (ex.: "Transação cancelada com sucesso"). */
+    private val _notice = MutableStateFlow<String?>(null)
+    val notice: StateFlow<String?> = _notice.asStateFlow()
+
     /**
      * O cache local não guarda tags (Task 4.1) e o backend substitui as
      * tags quando tagIds != null. Enviar null preserva as existentes;
@@ -129,6 +136,8 @@ abstract class BaseEditTransactionViewModel(
         state: TransactionFormState,
         tagIds: List<String>?
     ): ApiResult<TransactionEntity>
+
+    protected abstract suspend fun submitCancel(id: String): ApiResult<TransactionEntity>
 
     init {
         viewModelScope.launch {
@@ -190,8 +199,48 @@ abstract class BaseEditTransactionViewModel(
         _generalError.value = null
     }
 
+    fun clearNotice() {
+        _notice.value = null
+    }
+
     fun consumeSuccess() {
         _isSuccess.value = false
+    }
+
+    /**
+     * Task 4.10 — Cancelamento (endpoint PATCH /{id}/cancel, status
+     * CANCELLED). Anti duplo envio; Room só sincroniza após sucesso
+     * (repository); erro preserva o cache e o estado editável.
+     * Chamada só após confirmação destrutiva na tela.
+     */
+    fun cancel() {
+        if (_isCancelling.value) return
+        if (!_editable.value) return
+
+        _isCancelling.value = true
+        _generalError.value = null
+
+        viewModelScope.launch {
+            when (val result = submitCancel(transactionId)) {
+                is ApiResult.Success -> {
+                    _isCancelling.value = false
+                    _editable.value = false
+                    _notice.value = "Transação cancelada com sucesso."
+                }
+                is ApiResult.HttpError -> {
+                    _isCancelling.value = false
+                    _generalError.value = "Erro ao cancelar (${result.code}). Transação não alterada."
+                }
+                is ApiResult.NetworkError -> {
+                    _isCancelling.value = false
+                    _generalError.value = "Sem conexão. Transação não cancelada."
+                }
+                is ApiResult.UnknownError -> {
+                    _isCancelling.value = false
+                    _generalError.value = "Erro inesperado ao cancelar."
+                }
+            }
+        }
     }
 
     fun onSaveClick() {

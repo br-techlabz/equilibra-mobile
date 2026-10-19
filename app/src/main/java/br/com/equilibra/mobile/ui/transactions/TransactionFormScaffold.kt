@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -53,9 +57,15 @@ internal fun TransactionFormScaffold(
     onSuccess: () -> Unit,
     onBack: () -> Unit,
     editable: Boolean,
-    screenDescription: String
+    screenDescription: String,
+    /** Task 4.10 — cancelamento com confirmação; null esconde a ação. */
+    onCancelTransaction: (() -> Unit)? = null,
+    isCancelling: Boolean = false,
+    notice: String? = null,
+    onClearNotice: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
@@ -69,6 +79,23 @@ internal fun TransactionFormScaffold(
             snackbarHostState.showSnackbar(it)
             onClearError()
         }
+    }
+
+    LaunchedEffect(notice) {
+        notice?.let {
+            snackbarHostState.showSnackbar(it)
+            onClearNotice()
+        }
+    }
+
+    if (showCancelDialog) {
+        CancelTransactionDialog(
+            onConfirm = {
+                showCancelDialog = false
+                onCancelTransaction?.invoke()
+            },
+            onDismiss = { showCancelDialog = false }
+        )
     }
 
     Scaffold(
@@ -127,8 +154,50 @@ internal fun TransactionFormScaffold(
                     Text("Voltar")
                 }
 
+                if (onCancelTransaction != null && editable) {
+                    TextButton(
+                        onClick = { showCancelDialog = true },
+                        enabled = !isSaving && !isCancelling
+                    ) {
+                        Text(
+                            text = "Cancelar transação",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
+}
+
+/**
+ * Task 4.10 — Confirmação de ação destrutiva antes de cancelar.
+ */
+@Composable
+internal fun CancelTransactionDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cancelar transação") },
+        text = {
+            Text("Esta ação não pode ser desfeita. A transação ficará registrada como cancelada.")
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = "Sim, cancelar",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Voltar")
+            }
+        }
+    )
 }

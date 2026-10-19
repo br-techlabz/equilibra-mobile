@@ -55,6 +55,8 @@ fun EditExpenseScreen(
     val generalError by viewModel.generalError.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val editable by viewModel.editable.collectAsState()
+    val isCancelling by viewModel.isCancelling.collectAsState()
+    val notice by viewModel.notice.collectAsState()
 
     TransactionFormScaffold(
         title = "Editar despesa",
@@ -76,6 +78,10 @@ fun EditExpenseScreen(
         onSuccess = onSuccess,
         onBack = onBack,
         editable = editable,
-        screenDescription = "Tela de editar despesa"
+        screenDescription = "Tela de editar despesa",
+        onCancelTransaction = viewModel::cancel,
+        isCancelling = isCancelling,
+        notice = notice,
+        onClearNotice = viewModel::clearNotice
     )
 }
