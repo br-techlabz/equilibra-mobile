@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -71,6 +72,7 @@ data class MoreMenuItem(
 fun MoreScreen(
     onLogout: () -> Unit,
     onCategories: () -> Unit = {},
+    onTags: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val comingSoonMessage = "Em breve"
@@ -88,6 +90,12 @@ fun MoreScreen(
             label = "Categorias",
             subtitle = "Criar, editar e ativar categorias",
             onClick = onCategories
+        ),
+        MoreMenuItem(
+            icon = Icons.Default.Tag,
+            label = "Tags",
+            subtitle = "Criar, editar e ativar tags",
+            onClick = onTags
         ),
         MoreMenuItem(
             icon = Icons.Default.Notifications,

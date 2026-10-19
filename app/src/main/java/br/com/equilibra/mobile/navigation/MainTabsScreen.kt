@@ -26,7 +26,10 @@ import br.com.equilibra.mobile.ui.accounts.AccountsScreen
 import br.com.equilibra.mobile.ui.accounts.CreateAccountScreen
 import br.com.equilibra.mobile.ui.accounts.CategoriesScreen
 import br.com.equilibra.mobile.ui.accounts.CreateCategoryScreen
+import br.com.equilibra.mobile.ui.accounts.CreateTagScreen
 import br.com.equilibra.mobile.ui.accounts.EditCategoryScreen
+import br.com.equilibra.mobile.ui.accounts.EditTagScreen
+import br.com.equilibra.mobile.ui.accounts.TagsScreen
 import br.com.equilibra.mobile.ui.accounts.EditAccountScreen
 import br.com.equilibra.mobile.ui.accounts.ReconcileAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
@@ -189,9 +192,34 @@ private fun MainTabsNavHost(
             )
         }
 
+        composable("tags") {
+            TagsScreen(
+                onTagClick = { id -> navController.navigate("tags/$id/edit") },
+                onCreateClick = { navController.navigate("tags/create") }
+            )
+        }
+
+        composable("tags/create") {
+            CreateTagScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "tags/{tagId}/edit",
+            arguments = listOf(navArgument("tagId") { type = NavType.StringType })
+        ) {
+            EditTagScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable(MainTab.MORE.route) {
             MoreScreen(
                 onCategories = { navController.navigate("categories") },
+                onTags = { navController.navigate("tags") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }

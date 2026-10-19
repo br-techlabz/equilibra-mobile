@@ -43,13 +43,16 @@ class MoreMenuItemTest {
     }
 
     @Test
-    fun `logout é o único item habilitado por padrão`() {
-        // Este teste documenta o comportamento esperado:
-        // apenas "Sair da conta" é habilitado; o resto é "Em breve"
+    fun `itens habilitados e em breve seguem o contrato da tela Mais`() {
+        // Este teste documenta o comportamento esperado da tela Mais:
+        // itens entregues (Categorias, Tags) + logout habilitados; o resto é "Em breve"
         val comingSoonItems = listOf("Perfil", "Notificações", "Segurança", "Configurações", "Ajuda", "Privacidade")
-        val enabledItems = listOf("Sair da conta")
+        val enabledItems = listOf("Categorias", "Tags", "Sair da conta")
 
         assertEquals(6, comingSoonItems.size)
-        assertEquals(1, enabledItems.size)
+        assertEquals(3, enabledItems.size)
+        assertTrue(enabledItems.contains("Sair da conta"))
+        assertTrue(enabledItems.contains("Categorias"))
+        assertTrue(enabledItems.contains("Tags"))
     }
 }
