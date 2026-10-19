@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tag
@@ -73,6 +74,7 @@ fun MoreScreen(
     onLogout: () -> Unit,
     onCategories: () -> Unit = {},
     onTags: () -> Unit = {},
+    onExpenses: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val comingSoonMessage = "Em breve"
@@ -96,6 +98,12 @@ fun MoreScreen(
             label = "Tags",
             subtitle = "Criar, editar e ativar tags",
             onClick = onTags
+        ),
+        MoreMenuItem(
+            icon = Icons.Default.Receipt,
+            label = "Despesas",
+            subtitle = "Listar despesas",
+            onClick = onExpenses
         ),
         MoreMenuItem(
             icon = Icons.Default.Notifications,

@@ -441,6 +441,65 @@ class TransactionRepositoryTest {
         assertEquals("Cache", dao.getById("e1")!!.description)
     }
 
+    // ---------- paginação (lista de despesas — Task 4.5) ----------
+
+    @Test
+    fun listExpensesPaginadoRetornaMapeadoSemPersistir() = runTest {
+        coEvery { expenseApi.list(1, 20, false) } returns Response.success(
+            ExpensePageResponseDto(
+                content = listOf(expenseDto(id = "p1", description = "Página 1")),
+                page = 1, size = 20, totalElements = 45, totalPages = 3
+            )
+        )
+
+        val result = repository.listExpenses(page = 1, includeCancelled = false)
+
+        assertTrue(result is ApiResult.Success)
+        val txPage = (result as ApiResult.Success).data
+        assertEquals(1, txPage.page)
+        assertEquals(3, txPage.totalPages)
+        assertEquals(45L, txPage.totalElements)
+        assertEquals("Página 1", txPage.items[0].description)
+        assertEquals("EXPENSE", txPage.items[0].type)
+        assertEquals("acc-1", txPage.items[0].sourceAccountId)
+        // Paginação NÃO escreve no cache
+        assertEquals(0, dao.getAll().size)
+    }
+
+    @Test
+    fun listExpensesRepasaIncludeCancelled() = runTest {
+        coEvery { expenseApi.list(0, 20, true) } returns Response.success(
+            ExpensePageResponseDto(emptyList(), 0, 20, 0, 0)
+        )
+
+        val result = repository.listExpenses(page = 0, includeCancelled = true)
+
+        assertTrue(result is ApiResult.Success)
+        coVerify { expenseApi.list(0, 20, true) }
+    }
+
+    @Test
+    fun listExpensesErroDeRedeNAoMexeNoCache() = runTest {
+        dao.upsert(TransactionEntity("e1", "EXPENSE", "ACTIVE", "Cache", "2026-10-01T00:00:00Z", "1.00",
+            createdAt = "2026-10-01T00:00:00Z", updatedAt = "2026-10-01T00:00:00Z"))
+        coEvery { expenseApi.list(any(), any(), any()) } throws IOException("offline")
+
+        val result = repository.listExpenses(page = 0, includeCancelled = false)
+
+        assertTrue(result is ApiResult.NetworkError)
+        assertEquals(1, dao.getAll().size)
+    }
+
+    @Test
+    fun listExpensesErroHttpPropagaCodigo() = runTest {
+        coEvery { expenseApi.list(any(), any(), any()) } returns Response.error(500, "err".toResponseBody())
+
+        val result = repository.listExpenses(page = 0, includeCancelled = false)
+
+        assertTrue(result is ApiResult.HttpError)
+        assertEquals(500, (result as ApiResult.HttpError).code)
+    }
+
     companion object {
         private var seq = 0
     }

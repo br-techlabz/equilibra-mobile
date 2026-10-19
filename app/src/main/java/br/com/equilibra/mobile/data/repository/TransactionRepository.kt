@@ -51,6 +51,31 @@ class TransactionRepository @Inject constructor(
 
     suspend fun getByIdCached(id: String): TransactionEntity? = dao.getById(id)
 
+    // Paginação (listas — Task 4.5) — API direto, sem escrever no cache
+
+    /**
+     * Lista paginada de despesas conforme o contrato real (page 0-based,
+     * size default 20, includeCancelled). Mapeia para [TransactionEntity]
+     * sem persistir — o cache só é populado por [refresh].
+     */
+    suspend fun listExpenses(
+        page: Int,
+        includeCancelled: Boolean,
+        size: Int = PAGE_SIZE_LIST
+    ): ApiResult<TransactionPage> = when (val result = safeApiCall { expenseApi.list(page, size, includeCancelled) }) {
+        is ApiResult.Success -> ApiResult.Success(
+            TransactionPage(
+                items = result.data.content.map { it.like().toEntity(TYPE_EXPENSE, syncedAt = null) },
+                page = result.data.page,
+                totalPages = result.data.totalPages,
+                totalElements = result.data.totalElements
+            )
+        )
+        is ApiResult.HttpError -> result
+        is ApiResult.NetworkError -> result
+        is ApiResult.UnknownError -> result
+    }
+
     // Sincronização
 
     /**
@@ -313,7 +338,7 @@ class TransactionRepository @Inject constructor(
         override fun destinationAccountId() = this@like.destinationAccountId
     }
 
-    private fun TransactionDtoLike.toEntity(type: String, syncedAt: Long) = TransactionEntity(
+    private fun TransactionDtoLike.toEntity(type: String, syncedAt: Long?) = TransactionEntity(
         id = id,
         type = type,
         status = status,
@@ -335,6 +360,20 @@ class TransactionRepository @Inject constructor(
         const val TYPE_TRANSFER = "TRANSFER"
         const val CACHE_LIMIT = 100
         const val SYNC_PAGE_SIZE = 100
+        const val PAGE_SIZE_LIST = 20
         private val ALL_TYPES = listOf(TYPE_EXPENSE, TYPE_INCOME, TYPE_TRANSFER)
     }
+}
+
+/**
+ * Página de transações mapeadas para exibição (não persiste no cache).
+ * totalPages 0-based: última página = totalPages - 1 (página vazia → 0).
+ */
+data class TransactionPage(
+    val items: List<TransactionEntity>,
+    val page: Int,
+    val totalPages: Int,
+    val totalElements: Long
+) {
+    val isLastPage: Boolean get() = page >= totalPages - 1 || items.isEmpty()
 }

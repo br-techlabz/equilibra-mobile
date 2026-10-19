@@ -37,6 +37,7 @@ import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
 import br.com.equilibra.mobile.ui.reports.ReportsScreen
+import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 
@@ -192,6 +193,10 @@ private fun MainTabsNavHost(
             )
         }
 
+        composable("expenses") {
+            ExpensesScreen()
+        }
+
         composable("tags") {
             TagsScreen(
                 onTagClick = { id -> navController.navigate("tags/$id/edit") },
@@ -220,6 +225,7 @@ private fun MainTabsNavHost(
             MoreScreen(
                 onCategories = { navController.navigate("categories") },
                 onTags = { navController.navigate("tags") },
+                onExpenses = { navController.navigate("expenses") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }
