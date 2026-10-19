@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -69,6 +70,7 @@ data class MoreMenuItem(
 @Composable
 fun MoreScreen(
     onLogout: () -> Unit,
+    onCategories: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val comingSoonMessage = "Em breve"
@@ -80,6 +82,12 @@ fun MoreScreen(
             subtitle = comingSoonMessage,
             enabled = false,
             onClick = {}
+        ),
+        MoreMenuItem(
+            icon = Icons.Default.Category,
+            label = "Categorias",
+            subtitle = "Criar, editar e ativar categorias",
+            onClick = onCategories
         ),
         MoreMenuItem(
             icon = Icons.Default.Notifications,

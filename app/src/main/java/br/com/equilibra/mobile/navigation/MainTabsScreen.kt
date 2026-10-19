@@ -24,6 +24,9 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import br.com.equilibra.mobile.ui.accounts.AccountsScreen
 import br.com.equilibra.mobile.ui.accounts.CreateAccountScreen
+import br.com.equilibra.mobile.ui.accounts.CategoriesScreen
+import br.com.equilibra.mobile.ui.accounts.CreateCategoryScreen
+import br.com.equilibra.mobile.ui.accounts.EditCategoryScreen
 import br.com.equilibra.mobile.ui.accounts.EditAccountScreen
 import br.com.equilibra.mobile.ui.accounts.ReconcileAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
@@ -136,8 +139,8 @@ private fun MainTabsNavHost(
         composable(
             route = "accounts/{accountId}/edit",
             arguments = listOf(navArgument("accountId") { type = NavType.StringType })
-        ) { entry ->
-            val accountId = entry.arguments?.getString("accountId").orEmpty()
+        ) { backStackEntry ->
+            val accountId = backStackEntry.arguments?.getString("accountId").orEmpty()
             EditAccountScreen(
                 onSuccess = { navController.popBackStack() },
                 onBack = { navController.popBackStack() },
@@ -162,8 +165,33 @@ private fun MainTabsNavHost(
             ReportsScreen()
         }
 
+        composable("categories") {
+            CategoriesScreen(
+                onCategoryClick = { id -> navController.navigate("categories/$id/edit") },
+                onCreateClick = { navController.navigate("categories/create") }
+            )
+        }
+
+        composable("categories/create") {
+            CreateCategoryScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "categories/{categoryId}/edit",
+            arguments = listOf(navArgument("categoryId") { type = NavType.StringType })
+        ) {
+            EditCategoryScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
         composable(MainTab.MORE.route) {
             MoreScreen(
+                onCategories = { navController.navigate("categories") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }
