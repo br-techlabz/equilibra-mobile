@@ -38,7 +38,9 @@ import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
 import br.com.equilibra.mobile.ui.reports.ReportsScreen
 import br.com.equilibra.mobile.ui.transactions.CreateExpenseScreen
+import br.com.equilibra.mobile.ui.transactions.CreateIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.EditExpenseScreen
+import br.com.equilibra.mobile.ui.transactions.EditIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
 import br.com.equilibra.mobile.ui.transactions.IncomesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
@@ -204,7 +206,27 @@ private fun MainTabsNavHost(
         }
 
         composable("incomes") {
-            IncomesScreen()
+            IncomesScreen(
+                onIncomeClick = { id -> navController.navigate("incomes/$id/edit") },
+                onCreateClick = { navController.navigate("incomes/create") }
+            )
+        }
+
+        composable("incomes/create") {
+            CreateIncomeScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "incomes/{incomeId}/edit",
+            arguments = listOf(navArgument("incomeId") { type = NavType.StringType })
+        ) {
+            EditIncomeScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("expenses/create") {

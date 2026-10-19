@@ -64,7 +64,6 @@ fun IncomesScreen(
                 createLabel = "Nova",
                 emptyTitle = "Nenhuma receita",
                 emptySubtitle = "Receitas criadas aparecem aqui",
-                canCreate = false, // criar/editar receita chega na Task 4.8
                 onCreateClick = onCreateClick,
                 onItemClick = onIncomeClick,
                 onRefresh = { viewModel.refresh() },
