@@ -7,6 +7,7 @@ import br.com.equilibra.mobile.data.remote.CategoryApi
 import br.com.equilibra.mobile.data.remote.AssetAccountApi
 import br.com.equilibra.mobile.data.remote.DashboardApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
+import br.com.equilibra.mobile.data.remote.TagApi
 import br.com.equilibra.mobile.data.remote.TokenAuthenticator
 import dagger.Module
 import dagger.Provides
@@ -86,4 +87,8 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideCategoryApi(retrofit: Retrofit): CategoryApi = retrofit.create(CategoryApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTagApi(retrofit: Retrofit): TagApi = retrofit.create(TagApi::class.java)
 }

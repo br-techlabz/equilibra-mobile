@@ -32,8 +32,8 @@ class EquilibraDatabaseTest {
         val dao = db.openHelper
         assertTrue(dao.readableDatabase.isOpen)
 
-        // Versão atual = 3 (Task 3.9: contas + categorias)
-        assertEquals(3, EquilibraDatabase.DATABASE_VERSION)
+        // Versão atual = 4 (Task 3.11: contas + categorias + tags)
+        assertEquals(4, EquilibraDatabase.DATABASE_VERSION)
         assertEquals("equilibra.db", EquilibraDatabase.DATABASE_NAME)
 
         db.close()
@@ -45,8 +45,8 @@ class EquilibraDatabaseTest {
     }
 
     @Test
-    fun databaseVersionIsThree() {
-        assertEquals(3, EquilibraDatabase.DATABASE_VERSION)
+    fun databaseVersionIsFour() {
+        assertEquals(4, EquilibraDatabase.DATABASE_VERSION)
     }
 
     @Test
@@ -140,6 +140,48 @@ class EquilibraDatabaseTest {
             assertTrue("Tabela categories deve existir após MIGRATION_2_3", c.count > 0)
         }
         dbV3.close()
+        context.getDatabasePath(dbName)?.delete()
+    }
+
+    @Test
+    fun migration3To4CreatesTagsTable() {
+        val dbName = "test-migration-3-4.db"
+        context.getDatabasePath(dbName)?.delete()
+        // Passo 1: cria fisicamente um DB v3 (accounts + categories)
+        run {
+            val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+                androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                    .name(dbName)
+                    .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(3) {
+                        override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `initialBalance` TEXT NOT NULL, `currentBalance` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `categories` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `applicability` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                        }
+                        override fun onUpgrade(db: androidx.sqlite.db.SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+                    }).build()
+            )
+            helper.writableDatabase.close()
+            helper.close()
+        }
+        // Passo 2: abre como v4 com migrations
+        val dbV4 = Room.databaseBuilder(
+            context,
+            EquilibraDatabase::class.java,
+            dbName
+        ).allowMainThreadQueries().addMigrations(*Migrations.ALL).build()
+        dbV4.openHelper.writableDatabase
+        dbV4.openHelper.readableDatabase.query("SELECT name FROM sqlite_master WHERE type='table' AND name='tags'").use { c ->
+            assertTrue("Tabela tags deve existir após MIGRATION_3_4", c.count > 0)
+        }
+        // Dados da v3 devem sobreviver
+        dbV4.openHelper.readableDatabase.query("SELECT name FROM sqlite_master WHERE type='table' AND name='categories'").use { c ->
+            assertTrue("Tabela categories deve continuar existindo", c.count > 0)
+        }
+        dbV4.close()
         context.getDatabasePath(dbName)?.delete()
     }
 
