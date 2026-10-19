@@ -43,7 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 /**
  * Tela principal com BottomNavigation e 5 abas.
  *
- * - Dashboard, Transações, Cartões, Relatórios, Mais
+ * - Dashboard, Contas, Cartões, Relatórios, Mais
  * - Estado das abas é preservado ao trocar (saveState/restoreState + launchSingleTop)
  * - Cada aba é uma composable separada para manter o estado isolado
  */
