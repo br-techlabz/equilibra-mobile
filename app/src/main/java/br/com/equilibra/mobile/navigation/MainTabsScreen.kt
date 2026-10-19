@@ -37,6 +37,8 @@ import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
 import br.com.equilibra.mobile.ui.reports.ReportsScreen
+import br.com.equilibra.mobile.ui.transactions.CreateExpenseScreen
+import br.com.equilibra.mobile.ui.transactions.EditExpenseScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -194,7 +196,27 @@ private fun MainTabsNavHost(
         }
 
         composable("expenses") {
-            ExpensesScreen()
+            ExpensesScreen(
+                onExpenseClick = { id -> navController.navigate("expenses/$id/edit") },
+                onCreateClick = { navController.navigate("expenses/create") }
+            )
+        }
+
+        composable("expenses/create") {
+            CreateExpenseScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = "expenses/{expenseId}/edit",
+            arguments = listOf(navArgument("expenseId") { type = NavType.StringType })
+        ) {
+            EditExpenseScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("tags") {

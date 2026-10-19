@@ -75,4 +75,14 @@ object TransactionFormValidator {
     } catch (_: Exception) {
         null
     }
+
+    /** Instant ISO-8601 → dd/MM/yyyy (exibição no formulário de edição). */
+    fun toDisplayDate(isoInstant: String): String = try {
+        java.time.Instant.parse(isoInstant)
+            .atZone(ZoneOffset.UTC)
+            .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    } catch (_: Exception) {
+        ""
+    }
 }

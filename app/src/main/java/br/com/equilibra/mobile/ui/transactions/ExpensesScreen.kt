@@ -70,6 +70,7 @@ private fun formatOccurredDate(iso: String): String = try {
 @Composable
 fun ExpensesScreen(
     onExpenseClick: (String) -> Unit = {},
+    onCreateClick: () -> Unit = {},
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -100,7 +101,8 @@ fun ExpensesScreen(
                 onRefresh = { viewModel.refresh() },
                 onLoadMore = { viewModel.loadMore() },
                 onToggleIncludeCancelled = { viewModel.toggleIncludeCancelled() },
-                onExpenseClick = onExpenseClick
+                onExpenseClick = onExpenseClick,
+                onCreateClick = onCreateClick
             )
 
             is ExpensesUiState.Error -> ListError(
@@ -125,7 +127,8 @@ private fun SuccessContent(
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
     onToggleIncludeCancelled: () -> Unit,
-    onExpenseClick: (String) -> Unit
+    onExpenseClick: (String) -> Unit,
+    onCreateClick: () -> Unit
 ) {
     androidx.compose.material3.pulltorefresh.PullToRefreshBox(
         isRefreshing = state.isRefreshing,
@@ -147,11 +150,18 @@ private fun SuccessContent(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                FilterChip(
-                    selected = state.includeCancelled,
-                    onClick = onToggleIncludeCancelled,
-                    label = { Text("Canceladas") }
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = state.includeCancelled,
+                        onClick = onToggleIncludeCancelled,
+                        label = { Text("Canceladas") }
+                    )
+                    FilterChip(
+                        selected = false,
+                        onClick = onCreateClick,
+                        label = { Text("Nova") }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +173,9 @@ private fun SuccessContent(
                         "Nenhuma despesa encontrada"
                     } else {
                         "Despesas criadas aparecem aqui"
-                    }
+                    },
+                    actionLabel = "Criar despesa",
+                    onAction = onCreateClick
                 )
             } else {
                 LazyColumn(
