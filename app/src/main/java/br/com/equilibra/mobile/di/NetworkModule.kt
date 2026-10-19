@@ -6,6 +6,9 @@ import br.com.equilibra.mobile.data.remote.AuthInterceptor
 import br.com.equilibra.mobile.data.remote.CategoryApi
 import br.com.equilibra.mobile.data.remote.AssetAccountApi
 import br.com.equilibra.mobile.data.remote.DashboardApi
+import br.com.equilibra.mobile.data.remote.ExpenseApi
+import br.com.equilibra.mobile.data.remote.IncomeApi
+import br.com.equilibra.mobile.data.remote.TransferApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
 import br.com.equilibra.mobile.data.remote.TagApi
 import br.com.equilibra.mobile.data.remote.TokenAuthenticator
@@ -91,4 +94,16 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideTagApi(retrofit: Retrofit): TagApi = retrofit.create(TagApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideExpenseApi(retrofit: Retrofit): ExpenseApi = retrofit.create(ExpenseApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideIncomeApi(retrofit: Retrofit): IncomeApi = retrofit.create(IncomeApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTransferApi(retrofit: Retrofit): TransferApi = retrofit.create(TransferApi::class.java)
 }
