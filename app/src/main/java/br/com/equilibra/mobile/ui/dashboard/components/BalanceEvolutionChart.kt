@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import br.com.equilibra.mobile.domain.model.dashboard.BalanceSeries
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -28,9 +29,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import java.math.BigDecimal
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /**
  * Gráfico de evolução de saldo (Task 2.6).
@@ -188,12 +186,7 @@ private fun ChartCard(series: List<BalanceSeries>) {
     }
 }
 
-private fun formatChartDate(isoInstant: String): String {
-    return try {
-        val instant = Instant.parse(isoInstant)
-        val date = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-        date.format(DateTimeFormatter.ofPattern("dd/MM"))
-    } catch (_: Exception) {
-        isoInstant.take(10)
-    }
-}
+// UTC centralizado via DateTimeFormat (Task 4.13) — antes usava o fuso do
+// dispositivo e podia divergir do restante do app.
+private fun formatChartDate(isoInstant: String): String =
+    DateTimeFormat.formatShortDate(isoInstant, fallback = isoInstant.take(10))

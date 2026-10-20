@@ -7,6 +7,7 @@ import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.domain.model.dashboard.Dashboard
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodSelection
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodType
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -137,10 +138,8 @@ class DashboardViewModel @Inject constructor(
     /**
      * Formata o período para exibição (ex.: "01/10/2026 — 31/10/2026").
      */
-    private fun formatPeriodLabel(period: DashboardPeriodSelection): String {
-        val fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
-        return "${period.from.format(fmt)} — ${period.to.format(fmt)}"
-    }
+    private fun formatPeriodLabel(period: DashboardPeriodSelection): String =
+        "${DateTimeFormat.formatDate(period.from)} — ${DateTimeFormat.formatDate(period.to)}"
 
     // Legacy helpers (mantidos para compatibilidade com tests antigos)
     fun load(from: String, to: String) {

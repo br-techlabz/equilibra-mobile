@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -30,10 +29,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.com.equilibra.mobile.domain.model.dashboard.RecentTransaction
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import br.com.equilibra.mobile.ui.theme.LocalFinancialColors
 
 /**
  * Seção de transações recentes (Task 2.5).
@@ -127,11 +125,14 @@ private fun RecentTransactionRow(
     val isIncome = transaction.type.equals("INCOME", ignoreCase = true)
     val isTransfer = transaction.type.equals("TRANSFER", ignoreCase = true)
 
+    // Cores semânticas pelo tema (Task 4.13); tipo nunca só por cor —
+    // o sinal (+/-), o ícone direcional e o rótulo acompanham sempre.
+    val financialColors = LocalFinancialColors.current
     val amountColor = when {
         isCancelled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-        isIncome -> Color(0xFF2E7D32)
+        isIncome -> financialColors.income
         isTransfer -> MaterialTheme.colorScheme.onSurface
-        else -> Color(0xFFC62828)
+        else -> financialColors.expense
     }
 
     val icon = when {
@@ -175,9 +176,9 @@ private fun RecentTransactionRow(
                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             } else {
                 when {
-                    isIncome -> Color(0xFF2E7D32)
+                    isIncome -> financialColors.income
                     isTransfer -> MaterialTheme.colorScheme.primary
-                    else -> Color(0xFFC62828)
+                    else -> financialColors.expense
                 }
             },
             modifier = Modifier.size(24.dp)
@@ -274,16 +275,11 @@ private fun RecentTransactionRow(
 
 /**
  * Formata a data de ocorrência em pt-BR (ex.: "15/10/2026").
+ * UTC centralizado via [DateTimeFormat] (Task 4.13) — mesmo critério do
+ * restante do app, independente do fuso do dispositivo.
  */
-private fun formatOccurredAt(occurredAt: String): String {
-    return try {
-        val instant = Instant.parse(occurredAt)
-        val date = instant.atZone(ZoneId.systemDefault()).toLocalDate()
-        date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    } catch (_: Exception) {
-        occurredAt
-    }
-}
+private fun formatOccurredAt(occurredAt: String): String =
+    DateTimeFormat.formatDate(occurredAt, fallback = occurredAt)
 
 /**
  * Label da conta (quando disponível).

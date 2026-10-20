@@ -44,6 +44,20 @@ class MoneyFormatterTest {
     }
 
     @Test
+    fun format_nullUsaPlaceholderDeAusencia() {
+        // ausência de valor não pode parecer zero
+        assertEquals("-", MoneyFormatter.format(null))
+        assertEquals(MoneyFormatter.NULL_PLACEHOLDER, MoneyFormatter.format(null))
+    }
+
+    @Test
+    fun format_negativoMantemSinalAnteriorAoSimbolo() {
+        val formatted = MoneyFormatter.format("-100.00")
+        assertTrue(formatted.startsWith("-"))
+        assertTrue(formatted.contains("100,00"))
+    }
+
+    @Test
     fun parse_convertsStringToBigDecimal() {
         assertEquals(BigDecimal("1234.56"), MoneyFormatter.parse("1234.56"))
         assertEquals(BigDecimal("0.00"), MoneyFormatter.parse("0.00"))

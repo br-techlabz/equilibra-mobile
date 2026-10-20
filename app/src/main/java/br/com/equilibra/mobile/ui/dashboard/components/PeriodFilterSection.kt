@@ -28,8 +28,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodSelection
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardPeriodType
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 /**
  * Filtro de período (Task 2.9).
@@ -129,7 +129,7 @@ fun PeriodFilterSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedTextField(
-                            value = customFrom.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            value = DateTimeFormat.formatDate(customFrom),
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("De") },
@@ -137,7 +137,7 @@ fun PeriodFilterSection(
                             enabled = false
                         )
                         OutlinedTextField(
-                            value = customTo.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            value = DateTimeFormat.formatDate(customTo),
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Até") },
@@ -185,6 +185,5 @@ fun PeriodFilterSection(
 }
 
 private fun formatPeriodForDisplay(period: DashboardPeriodSelection): String {
-    val fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    return "${period.from.format(fmt)} — ${period.to.format(fmt)}"
+    return "${DateTimeFormat.formatDate(period.from)} — ${DateTimeFormat.formatDate(period.to)}"
 }

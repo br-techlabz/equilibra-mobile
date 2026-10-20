@@ -16,13 +16,19 @@ object MoneyFormatter {
 
     private val ptBr: Locale = Locale("pt", "BR")
 
+    /** Placeholder para valor ausente: "-" não confunde com zero. */
+    const val NULL_PLACEHOLDER = "-"
+
     /**
      * Formata um valor monetário (String) para exibição pt-BR.
      *
      * Converte a string para BigDecimal e formata com Locale pt-BR.
-     * Em caso de erro de parsing, retorna o valor original.
+     * - null → [NULL_PLACEHOLDER] (ausência ≠ zero);
+     * - negativos mantêm o sinal (ex.: -R$ 10,00);
+     * - erro de parsing → valor original.
      */
-    fun format(value: String): String {
+    fun format(value: String?): String {
+        if (value == null) return NULL_PLACEHOLDER
         return try {
             val decimal = BigDecimal(value)
             val format = NumberFormat.getCurrencyInstance(ptBr)

@@ -31,24 +31,18 @@ import androidx.compose.ui.unit.dp
 import br.com.equilibra.mobile.data.local.account.AccountEntity
 import br.com.equilibra.mobile.data.local.category.CategoryEntity
 import br.com.equilibra.mobile.data.local.transaction.TransactionEntity
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
 import br.com.equilibra.mobile.ui.components.ListEmptyState
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 /**
  * Task 4.7 — Conteúdo compartilhado das listas paginadas de transações
  * (despesas da Task 4.5 e receitas desta task — mesmos estados e paginação).
  */
 
-private val displayDate: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-internal fun formatOccurredDate(iso: String): String = try {
-    Instant.parse(iso).atZone(ZoneOffset.UTC).toLocalDate().format(displayDate)
-} catch (_: Exception) {
-    iso
-}
+// Task 4.13 — delega ao formatador central (UTC, dd/MM/yyyy)
+internal fun formatOccurredDate(iso: String): String =
+    DateTimeFormat.formatDate(iso, fallback = iso)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

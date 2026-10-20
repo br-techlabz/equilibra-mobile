@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import br.com.equilibra.mobile.domain.model.dashboard.DashboardSummary
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
+import br.com.equilibra.mobile.ui.theme.LocalFinancialColors
 
 /**
  * Cards de resumo financeiro (Task 2.3).
@@ -36,14 +37,17 @@ import br.com.equilibra.mobile.domain.util.MoneyFormatter
  * - Valores vindos da API (período aplicado)
  * - Moeda pt-BR via [MoneyFormatter]
  * - Sem conversão Float/Double (BigDecimal)
- * - Cores semânticas: receita verde, despesa vermelha, saldo/netWorth neutro
- * - Acessibilidade: contentDescription nos valores e labels
+ * - Cores semânticas via [LocalFinancialColors] (Task 4.13, tema claro/escuro):
+ *   receita verde, despesa vermelha, saldo/netWorth neutro
+ * - Acessibilidade: contentDescription nos valores e labels — o tipo nunca
+ *   depende só da cor (rótulo + ícone direcional acompanham)
  */
 @Composable
 fun SummaryCards(
     summary: DashboardSummary,
     modifier: Modifier = Modifier
 ) {
+    val financialColors = LocalFinancialColors.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -59,14 +63,14 @@ fun SummaryCards(
                 label = "Receita",
                 value = MoneyFormatter.format(summary.income),
                 icon = Icons.Default.ArrowDownward,
-                iconTint = Color(0xFF2E7D32),
+                iconTint = financialColors.income,
                 modifier = Modifier.weight(1f)
             )
             SummaryCard(
                 label = "Despesa",
                 value = MoneyFormatter.format(summary.expense),
                 icon = Icons.Default.ArrowUpward,
-                iconTint = Color(0xFFC62828),
+                iconTint = financialColors.expense,
                 modifier = Modifier.weight(1f)
             )
         }

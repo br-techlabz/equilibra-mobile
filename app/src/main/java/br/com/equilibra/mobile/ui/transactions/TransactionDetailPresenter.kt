@@ -3,10 +3,8 @@ package br.com.equilibra.mobile.ui.transactions
 import br.com.equilibra.mobile.domain.model.transaction.TransactionDetail
 import br.com.equilibra.mobile.domain.model.transaction.TransactionStatus
 import br.com.equilibra.mobile.domain.model.transaction.TransactionType
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import br.com.equilibra.mobile.domain.util.MoneyFormatter
-import java.time.Instant
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 /** Campo exibido no detalhe (rótulo pt-BR + valor já formatado). */
 data class DetailField(val label: String, val value: String)
@@ -26,9 +24,6 @@ data class AttachmentsState(
  * UTC — mesmo fuso do contrato Instant do backend.
  */
 object TransactionDetailPresenter {
-
-    private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-    private val dateTimeFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
 
     /**
      * Campos na ordem de exibição. Nomes resolvidos pelo cache (conta/categoria);
@@ -68,17 +63,11 @@ object TransactionDetailPresenter {
         message = "Anexos estarão disponíveis na próxima versão do app."
     )
 
-    private fun formatDate(iso: String): String = try {
-        Instant.parse(iso).atZone(ZoneOffset.UTC).toLocalDate().format(dateFormat)
-    } catch (_: Exception) {
-        iso
-    }
+    private fun formatDate(iso: String): String =
+        DateTimeFormat.formatDate(iso, fallback = iso)
 
-    private fun formatDateTime(iso: String): String? = try {
-        Instant.parse(iso).atZone(ZoneOffset.UTC).format(dateTimeFormat)
-    } catch (_: Exception) {
-        null
-    }
+    private fun formatDateTime(iso: String): String? =
+        DateTimeFormat.formatDateTime(iso)
 
     private fun labelPaymentMethod(value: String): String = when (value) {
         "BANK_ACCOUNT" -> "Conta bancária"

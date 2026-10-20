@@ -1,5 +1,6 @@
 package br.com.equilibra.mobile.ui.transactions
 
+import br.com.equilibra.mobile.domain.util.DateTimeFormat
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -98,14 +99,8 @@ object TransactionFormValidator {
     }
 
     /** Instant ISO-8601 → dd/MM/yyyy (exibição no formulário de edição). */
-    fun toDisplayDate(isoInstant: String): String = try {
-        java.time.Instant.parse(isoInstant)
-            .atZone(ZoneOffset.UTC)
-            .toLocalDate()
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-    } catch (_: Exception) {
-        ""
-    }
+    fun toDisplayDate(isoInstant: String): String =
+        DateTimeFormat.formatDate(isoInstant)
 
     /**
      * Inverso de [toInstantExclusiveEndIso] para exibição: um limite
@@ -119,8 +114,7 @@ object TransactionFormValidator {
         val instant = java.time.Instant.parse(isoInstant)
         val date = instant.atZone(ZoneOffset.UTC).toLocalDate()
         val isMidnight = instant == date.atStartOfDay(ZoneOffset.UTC).toInstant()
-        (if (isMidnight) date.minusDays(1) else date)
-            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        DateTimeFormat.formatDate(if (isMidnight) date.minusDays(1) else date)
     } catch (_: Exception) {
         ""
     }
