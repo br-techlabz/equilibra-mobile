@@ -11,7 +11,10 @@ import retrofit2.http.Query
  * GET /transactions com filtros combinados (todos opcionais):
  * - type: EXPENSE | INCOME | TRANSFER | STATEMENT_PAYMENT
  * - status: ACTIVE | CANCELLED
- * - from/to: Instant ISO-8601 DATE_TIME (BETWEEN inclusivo no backend)
+ * - from/to: Instant ISO-8601 DATE_TIME. Semântica real do backend
+ *   (FinancialTransactionRepository.findHistory): `occurredAt >= :from`
+ *   e `occurredAt < :to` — "to" é EXCLUSIVO. O backend também rejeita
+ *   from == to ou from > to (400).
  * - accountId, categoryId: UUIDs
  * - tagIds: lista (parâmetros repetidos na query)
  *

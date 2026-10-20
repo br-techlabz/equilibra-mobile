@@ -18,14 +18,14 @@ class HistoryFilterDraftTest {
     }
 
     @Test
-    fun `datas viram inicio e fim do dia em UTC`() {
+    fun `datas viram inicio do dia e inicio do dia seguinte`() {
         val draft = HistoryFilterDraft(fromDate = "01/10/2026", toDate = "31/10/2026")
 
         val filters = draft.toFilters()
 
         assertEquals("2026-10-01T00:00:00Z", filters.fromIso)
-        // BETWEEN do backend é inclusivo: "até" cobre o dia inteiro
-        assertEquals("2026-10-31T23:59:59.999999999Z", filters.toIso)
+        // Backend compara occurredAt < :to — limite superior exclusivo
+        assertEquals("2026-11-01T00:00:00Z", filters.toIso)
     }
 
     @Test
@@ -45,11 +45,26 @@ class HistoryFilterDraftTest {
     }
 
     @Test
-    fun `mesmo dia e valido`() {
+    fun `mesmo dia e valido e vira um dia de intervalo`() {
         val draft = HistoryFilterDraft(fromDate = "31/10/2026", toDate = "31/10/2026")
 
         assertTrue(draft.isValid)
         assertNull(draft.rangeError)
+        // from < to no backend: 31/10T00:00 < 01/11T00:00
+        assertEquals("2026-10-31T00:00:00Z", draft.toFilters().fromIso)
+        assertEquals("2026-11-01T00:00:00Z", draft.toFilters().toIso)
+    }
+
+    @Test
+    fun `exibicao do limite superior recua um dia na meia-noite`() {
+        // ida e volta: o painel mostra "31/10", não "01/11"
+        val date = TransactionFormValidator.toDisplayDateExclusiveEnd("2026-11-01T00:00:00Z")
+        assertEquals("31/10/2026", date)
+        // valor no meio do dia é exibido como está
+        assertEquals(
+            "01/11/2026",
+            TransactionFormValidator.toDisplayDateExclusiveEnd("2026-11-01T12:00:00Z")
+        )
     }
 
     @Test
@@ -79,7 +94,7 @@ class HistoryFilterDraftTest {
             type = "EXPENSE",
             status = "ACTIVE",
             fromIso = "2026-10-01T00:00:00Z",
-            toIso = "2026-10-31T23:59:59.999999999Z",
+            toIso = "2026-11-01T00:00:00Z",
             accountId = "acc-1",
             categoryId = null,
             tagIds = listOf("t1")

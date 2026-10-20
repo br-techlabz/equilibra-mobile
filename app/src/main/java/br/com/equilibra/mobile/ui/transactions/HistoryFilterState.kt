@@ -8,8 +8,9 @@ import br.com.equilibra.mobile.data.repository.HistoryFilters
  * Separado do [HistoryViewModel] porque é estado de rascunho da UI: o
  * usuário combina os filtros e só então chama `applyFilters`. A conversão
  * para [HistoryFilters] normaliza as datas para o contrato real
- * (Instant ISO-8601, "até" = fim do dia em UTC, pois o BETWEEN do
- * backend é inclusivo).
+ * (Instant ISO-8601): "de" no início do dia e "até" no início do dia
+ * SEGUINTE, porque o backend compara `occurredAt < :to` (limite superior
+ * exclusivo).
  *
  * Campos vazios/nulos significam "sem filtro" — o parâmetro é omitido da
  * query. Datas continuam em dd/MM/aaaa (exibição pt-BR).
@@ -30,7 +31,11 @@ data class HistoryFilterDraft(
     val toError: String?
         get() = if (toDate.isBlank()) null else TransactionFormValidator.validateDate(toDate)
 
-    /** Intervalo invertido só é erro quando as duas datas são válidas. */
+    /**
+     * Intervalo invertido só é erro quando as duas datas são válidas.
+     * Mesmo dia é permitido: "até" vira o início do dia seguinte e o
+     * backend recebe from < to.
+     */
     val rangeError: String?
         get() {
             if (fromDate.isBlank() || toDate.isBlank()) return null
@@ -50,7 +55,7 @@ data class HistoryFilterDraft(
         fromIso = fromDate.takeIf { it.isNotBlank() }
             ?.let { TransactionFormValidator.toInstantIso(it) },
         toIso = toDate.takeIf { it.isNotBlank() }
-            ?.let { TransactionFormValidator.toInstantEndOfDayIso(it) },
+            ?.let { TransactionFormValidator.toInstantExclusiveEndIso(it) },
         accountId = accountId,
         categoryId = categoryId,
         tagIds = tagIds
@@ -64,7 +69,10 @@ data class HistoryFilterDraft(
             type = filters.type,
             status = filters.status,
             fromDate = filters.fromIso?.let { TransactionFormValidator.toDisplayDate(it) }.orEmpty(),
-            toDate = filters.toIso?.let { TransactionFormValidator.toDisplayDate(it) }.orEmpty(),
+            // "to" é exclusivo: volta a ser exibido como o último dia incluído
+            toDate = filters.toIso
+                ?.let { TransactionFormValidator.toDisplayDateExclusiveEnd(it) }
+                .orEmpty(),
             accountId = filters.accountId,
             categoryId = filters.categoryId,
             tagIds = filters.tagIds

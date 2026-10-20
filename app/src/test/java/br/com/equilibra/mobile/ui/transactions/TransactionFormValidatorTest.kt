@@ -105,12 +105,12 @@ class TransactionFormValidatorTest {
     }
 
     @Test
-    fun toInstantEndOfDayIsoFechaODia() {
-        // BETWEEN no backend é inclusivo: "ate" precisa cobrir o dia inteiro
+    fun toInstantExclusiveEndIsoAbreODiaSeguinte() {
+        // Backend usa occurredAt < :to (limite exclusivo): "até 31/10" envia 01/11
         assertEquals(
-            "2026-10-31T23:59:59.999999999Z",
-            TransactionFormValidator.toInstantEndOfDayIso("31/10/2026")
+            "2026-11-01T00:00:00Z",
+            TransactionFormValidator.toInstantExclusiveEndIso("31/10/2026")
         )
-        assertNull(TransactionFormValidator.toInstantEndOfDayIso("inválida"))
+        assertNull(TransactionFormValidator.toInstantExclusiveEndIso("inválida"))
     }
 }

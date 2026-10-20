@@ -77,13 +77,20 @@ object TransactionFormValidator {
     }
 
     /**
-     * Fim do dia em UTC — o BETWEEN do backend é inclusivo, então o
-     * filtro "até" precisa cobrir o dia inteiro (Task 4.11).
+     * Limite superior EXCLUSIVO em UTC: início do dia seguinte ao informado.
+     *
+     * O contrato real do backend (`occurredAt < :to`) é exclusivo no limite
+     * superior, então "até 31/10/2026" envia 01/11/2026T00:00:00Z — assim o
+     * dia inteiro entra no resultado e o resto não.
+     *
+     * Também garante `from < to` quando from == to (o backend rejeita
+     * from >= to com 400): "de 31/10 até 31/10" vira um dia, não erro.
+     * (Task 4.11)
      */
-    fun toInstantEndOfDayIso(ddMMyyyy: String): String? = try {
+    fun toInstantExclusiveEndIso(ddMMyyyy: String): String? = try {
         parseDate(ddMMyyyy)
-            .atTime(23, 59, 59, 999_999_999)
-            .atZone(ZoneOffset.UTC)
+            .plusDays(1)
+            .atStartOfDay(ZoneOffset.UTC)
             .toInstant()
             .toString()
     } catch (_: Exception) {
@@ -95,6 +102,24 @@ object TransactionFormValidator {
         java.time.Instant.parse(isoInstant)
             .atZone(ZoneOffset.UTC)
             .toLocalDate()
+            .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    } catch (_: Exception) {
+        ""
+    }
+
+    /**
+     * Inverso de [toInstantExclusiveEndIso] para exibição: um limite
+     * superior gravado como início do dia seguinte volta a ser mostrado
+     * como o dia anterior ("até 31/10" continua 31/10, não 01/11).
+     *
+     * Só recua um dia quando o instant cai exatamente na meia-noite UTC —
+     * um valor no meio do dia é exibido como está.
+     */
+    fun toDisplayDateExclusiveEnd(isoInstant: String): String = try {
+        val instant = java.time.Instant.parse(isoInstant)
+        val date = instant.atZone(ZoneOffset.UTC).toLocalDate()
+        val isMidnight = instant == date.atStartOfDay(ZoneOffset.UTC).toInstant()
+        (if (isMidnight) date.minusDays(1) else date)
             .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
     } catch (_: Exception) {
         ""

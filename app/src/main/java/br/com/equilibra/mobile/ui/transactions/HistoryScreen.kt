@@ -240,7 +240,7 @@ private fun FilterSummary(filters: HistoryFilters, totalElements: Long) {
             add(if (status == HistoryFilterOptions.STATUS_CANCELLED) "Canceladas" else "Ativas")
         }
         filters.fromIso?.let { add("de ${TransactionFormValidator.toDisplayDate(it)}") }
-        filters.toIso?.let { add("até ${TransactionFormValidator.toDisplayDate(it)}") }
+        filters.toIso?.let { add("até ${TransactionFormValidator.toDisplayDateExclusiveEnd(it)}") }
         if (filters.accountId != null) add("conta filtrada")
         if (filters.categoryId != null) add("categoria filtrada")
         if (filters.tagIds.isNotEmpty()) {
