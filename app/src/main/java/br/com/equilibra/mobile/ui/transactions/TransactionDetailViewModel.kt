@@ -57,6 +57,25 @@ class TransactionDetailViewModel @Inject constructor(
 
     fun retry() = load()
 
+    /** Evita duplo fetch: o primeiro resume é o da abertura (init já carregou). */
+    private var hasResumedOnce = false
+
+    /**
+     * Chamado quando a tela volta a ficar visível (ON_RESUME). Resumes
+     * seguintes ao primeiro vêm de retorno à tela (ex.: edição em outra
+     * rota) e recarregam da API — senão o detalhe fica com dados
+     * desatualizados, já que a VM sobrevive na backstack entry.
+     * Só recarrega a partir de um detalhe carregado: estado de erro tem
+     * retry próprio e Loading já está em voo.
+     */
+    fun onScreenResumed() {
+        if (!hasResumedOnce) {
+            hasResumedOnce = true
+            return
+        }
+        if (_uiState.value is TransactionDetailUiState.Success) load()
+    }
+
     fun clearNotice() {
         val current = _uiState.value
         if (current is TransactionDetailUiState.Success && current.notice != null) {

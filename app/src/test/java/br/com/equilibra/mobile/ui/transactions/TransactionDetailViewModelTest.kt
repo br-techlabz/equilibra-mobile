@@ -141,6 +141,54 @@ class TransactionDetailViewModelTest {
         assertEquals("Mercado", successState(vm).detail.description)
     }
 
+    // ---------- retorno à tela (ON_RESUME) — bug: edição não atualizava o detalhe ----------
+
+    @Test
+    fun `primeiro resume nao recarrega pois init ja carregou`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onScreenResumed()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { repository.getDetail("EXPENSE", detailId) }
+    }
+
+    @Test
+    fun `resume apos edicao recarrega e mostra dados atualizados`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        // primeiro resume = entrada na tela, ignorado
+        vm.onScreenResumed()
+        advanceUntilIdle()
+
+        // edição em outra rota alterou a descrição no backend
+        coEvery { repository.getDetail(any(), any()) } returns
+            ApiResult.Success(detail(description = "Mercado editado"))
+        vm.onScreenResumed()
+        advanceUntilIdle()
+
+        assertEquals("Mercado editado", successState(vm).detail.description)
+        coVerify(exactly = 2) { repository.getDetail(any(), any()) }
+    }
+
+    @Test
+    fun `resume com estado de erro nao dispara recargaAutomatica`() = runTest {
+        coEvery { repository.getDetail(any(), any()) } returns
+            ApiResult.NetworkError(IOException("offline"))
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onScreenResumed()
+        vm.onScreenResumed()
+        advanceUntilIdle()
+
+        // erro tem retry próprio; resume não deve empilhar chamadas
+        coVerify(exactly = 1) { repository.getDetail(any(), any()) }
+        assertTrue(vm.uiState.value is TransactionDetailUiState.Error)
+    }
+
     // ---------- ação de cancelar ----------
 
     @Test
