@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -104,14 +103,7 @@ private fun MainBottomNavigationBar(
                 label = { Text(tab.label) },
                 selected = selected,
                 onClick = {
-                    navController.navigate(tab.route) {
-                        // Pop até o start destination para manter backstack limpo
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navController.navigate(tab.route, navController.tabNavOptions(tab))
                 }
             )
         }
