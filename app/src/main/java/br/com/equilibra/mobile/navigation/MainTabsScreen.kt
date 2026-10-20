@@ -44,6 +44,7 @@ import br.com.equilibra.mobile.ui.transactions.EditIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
 import br.com.equilibra.mobile.ui.transactions.HistoryScreen
 import br.com.equilibra.mobile.ui.transactions.IncomesScreen
+import br.com.equilibra.mobile.ui.transactions.TransactionDetailScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
 import br.com.equilibra.mobile.ui.transactions.TransferCreateScreen
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -141,10 +142,34 @@ private fun MainTabsNavHost(
         }
 
         // Task 4.11 — histórico unificado (lê /transactions, sem cache).
-        // O detalhe por ID é a Task 4.12: ainda não existe rota, então o
-        // item não navega (nenhum link quebrado).
         composable("history") {
-            HistoryScreen()
+            HistoryScreen(
+                // Task 4.12 — detalhe por ID: o backend não tem /transactions/{id},
+                // a rota leva tipo + id e o detalhe busca no endpoint do tipo.
+                onTransactionClick = { type, id ->
+                    navController.navigate("transactions/$type/$id")
+                }
+            )
+        }
+
+        composable(
+            route = "transactions/{transactionType}/{transactionId}",
+            arguments = listOf(
+                navArgument("transactionType") { type = NavType.StringType },
+                navArgument("transactionId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val type = backStackEntry.arguments?.getString("transactionType").orEmpty()
+            TransactionDetailScreen(
+                onEdit = { id ->
+                    // Só despesa/receita expõem "Editar" (sem tela de edição de transferência)
+                    when (type) {
+                        "EXPENSE" -> navController.navigate("expenses/$id/edit")
+                        "INCOME" -> navController.navigate("incomes/$id/edit")
+                    }
+                },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable("accounts/create") {

@@ -1,0 +1,88 @@
+package br.com.equilibra.mobile.ui.transactions
+
+import br.com.equilibra.mobile.domain.model.transaction.TransactionDetail
+import br.com.equilibra.mobile.domain.model.transaction.TransactionStatus
+import br.com.equilibra.mobile.domain.model.transaction.TransactionType
+import br.com.equilibra.mobile.domain.util.MoneyFormatter
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+
+/** Campo exibido no detalhe (rótulo pt-BR + valor já formatado). */
+data class DetailField(val label: String, val value: String)
+
+/**
+ * Estado provisório da seção de anexos enquanto a Sprint 5 não entrega a
+ * tela de anexos (Task 4.12 pede estado provisório explícito).
+ */
+data class AttachmentsState(
+    val isProvisional: Boolean,
+    val message: String? = null
+)
+
+/**
+ * Task 4.12 — Montagem da apresentação do detalhe (pura, testável fora do
+ * Compose). Formatação monetária segue [MoneyFormatter] (pt-BR) e datas em
+ * UTC — mesmo fuso do contrato Instant do backend.
+ */
+object TransactionDetailPresenter {
+
+    private val dateFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    private val dateTimeFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+
+    /**
+     * Campos na ordem de exibição. Nomes resolvidos pelo cache (conta/categoria);
+     * UUID desconhecido é omitido em vez de exposto. Opcionais vazios não
+     * geram campo.
+     */
+    fun fields(
+        detail: TransactionDetail,
+        accountNames: Map<String, String>,
+        categoryNames: Map<String, String>
+    ): List<DetailField> = buildList {
+        add(DetailField("Tipo", TransactionType.label(detail.type)))
+        add(DetailField("Status", TransactionStatus.label(detail.status)))
+        add(DetailField("Valor", MoneyFormatter.format(detail.amount)))
+        add(DetailField("Data", formatDate(detail.occurredAt)))
+
+        detail.sourceAccountId?.let { accountNames[it] }
+            ?.let { add(DetailField("Conta de origem", it)) }
+        detail.destinationAccountId?.let { accountNames[it] }
+            ?.let { add(DetailField("Conta de destino", it)) }
+        detail.categoryId?.let { categoryNames[it] }
+            ?.let { add(DetailField("Categoria", it)) }
+        detail.paymentMethod?.let { add(DetailField("Forma de pagamento", labelPaymentMethod(it))) }
+
+        if (detail.tagNames.isNotEmpty()) {
+            // Backend já ordena as tags por nome (TransactionHistoryService)
+            add(DetailField("Tags", detail.tagNames.joinToString(", ")))
+        }
+        detail.notes?.takeIf { it.isNotBlank() }?.let { add(DetailField("Notas", it.trim())) }
+
+        formatDateTime(detail.updatedAt)?.let { add(DetailField("Atualizada em", it)) }
+    }
+
+    /** Sprint 5 ainda não entregue: seção sempre provisória nesta task. */
+    fun attachmentsState(attachmentCount: Long?): AttachmentsState = AttachmentsState(
+        isProvisional = true,
+        message = "Anexos estarão disponíveis na próxima versão do app."
+    )
+
+    private fun formatDate(iso: String): String = try {
+        Instant.parse(iso).atZone(ZoneOffset.UTC).toLocalDate().format(dateFormat)
+    } catch (_: Exception) {
+        iso
+    }
+
+    private fun formatDateTime(iso: String): String? = try {
+        Instant.parse(iso).atZone(ZoneOffset.UTC).format(dateTimeFormat)
+    } catch (_: Exception) {
+        null
+    }
+
+    private fun labelPaymentMethod(value: String): String = when (value) {
+        "BANK_ACCOUNT" -> "Conta bancária"
+        "CREDIT_CARD" -> "Cartão de crédito"
+        else -> value
+    }
+}

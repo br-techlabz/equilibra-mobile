@@ -16,6 +16,7 @@ import br.com.equilibra.mobile.data.remote.dto.transaction.UpdateExpenseRequestD
 import br.com.equilibra.mobile.data.remote.dto.transaction.UpdateIncomeRequestDto
 import br.com.equilibra.mobile.data.remote.dto.transaction.UpdateTransferRequestDto
 import br.com.equilibra.mobile.data.remote.safeApiCall
+import br.com.equilibra.mobile.domain.model.transaction.TransactionDetail
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 import javax.inject.Inject
@@ -158,6 +159,17 @@ class TransactionRepository @Inject constructor(
         is ApiResult.UnknownError -> result
     }
 
+    /** GET /{id} de um tipo → contrato comum (Task 4.12). */
+    private suspend fun <P> mappedOne(
+        call: suspend () -> Response<P>,
+        extract: (P) -> TransactionDtoLike
+    ): ApiResult<TransactionDtoLike> = when (val result = safeApiCall(call)) {
+        is ApiResult.Success -> ApiResult.Success(extract(result.data))
+        is ApiResult.HttpError -> result
+        is ApiResult.NetworkError -> result
+        is ApiResult.UnknownError -> result
+    }
+
     /** Atualiza um item do cache via GET /{id} do tipo correspondente. */
     suspend fun refreshById(type: String, id: String): ApiResult<TransactionEntity> {
         val result: ApiResult<TransactionEntity> = when (type) {
@@ -168,6 +180,32 @@ class TransactionRepository @Inject constructor(
         }
         if (result is ApiResult.Success) dao.upsert(result.data)
         return result
+    }
+
+    /**
+     * Task 4.12 — Detalhe por ID para a tela de detalhe.
+     *
+     * O backend não expõe GET /transactions/{id}: o detalhe real vem do
+     * endpoint do próprio tipo (ExpenseResponse/IncomeResponse/TransferResponse),
+     * que é o único que devolve as tags. Somente leitura — não escreve no cache
+     * (a tela de detalhe também não é fonte de cache). STATEMENT_PAYMENT não
+     * tem endpoint de leitura por ID: retorna UnknownError sem chamar a API.
+     */
+    suspend fun getDetail(type: String, id: String): ApiResult<TransactionDetail> {
+        val result: ApiResult<TransactionDtoLike> = when (type) {
+            TYPE_EXPENSE -> mappedOne({ expenseApi.get(id) }) { it.like() }
+            TYPE_INCOME -> mappedOne({ incomeApi.get(id) }) { it.like() }
+            TYPE_TRANSFER -> mappedOne({ transferApi.get(id) }) { it.like() }
+            else -> return ApiResult.UnknownError(
+                IllegalArgumentException("Detalhe indisponível para o tipo: $type")
+            )
+        }
+        return when (result) {
+            is ApiResult.Success -> ApiResult.Success(result.data.toDetail(type))
+            is ApiResult.HttpError -> result
+            is ApiResult.NetworkError -> result
+            is ApiResult.UnknownError -> result
+        }
     }
 
     // Escritas — Room só após sucesso remoto
@@ -310,6 +348,10 @@ class TransactionRepository @Inject constructor(
         val status: String
         val createdAt: String
         val updatedAt: String
+        /** Nome das tags (backend já devolve ordenado por nome). */
+        val tagNames: List<String>
+        /** Só despesa expõe forma de pagamento. */
+        val paymentMethod: String?
         fun type(): String
         fun sourceAccountId(): String?
         fun destinationAccountId(): String?
@@ -325,6 +367,8 @@ class TransactionRepository @Inject constructor(
         override val status = this@like.status
         override val createdAt = this@like.createdAt
         override val updatedAt = this@like.updatedAt
+        override val tagNames = this@like.tags.map { it.name }
+        override val paymentMethod = this@like.paymentMethod
         override fun type() = TYPE_EXPENSE
         override fun sourceAccountId() = this@like.accountId // despesa sai da conta
         override fun destinationAccountId(): String? = null
@@ -340,6 +384,8 @@ class TransactionRepository @Inject constructor(
         override val status = this@like.status
         override val createdAt = this@like.createdAt
         override val updatedAt = this@like.updatedAt
+        override val tagNames = this@like.tags.map { it.name }
+        override val paymentMethod: String? = null
         override fun type() = TYPE_INCOME
         override fun sourceAccountId(): String? = null
         override fun destinationAccountId() = this@like.accountId // receita entra na conta
@@ -355,6 +401,8 @@ class TransactionRepository @Inject constructor(
         override val status = this@like.status
         override val createdAt = this@like.createdAt
         override val updatedAt = this@like.updatedAt
+        override val tagNames = this@like.tags.map { it.name }
+        override val paymentMethod: String? = null
         override fun type() = TYPE_TRANSFER
         override fun sourceAccountId() = this@like.sourceAccountId
         override fun destinationAccountId() = this@like.destinationAccountId
@@ -374,6 +422,23 @@ class TransactionRepository @Inject constructor(
         createdAt = createdAt,
         updatedAt = updatedAt,
         syncedAt = syncedAt
+    )
+
+    private fun TransactionDtoLike.toDetail(type: String) = TransactionDetail(
+        id = id,
+        type = type,
+        status = status,
+        description = description,
+        occurredAt = occurredAt,
+        amount = amount,
+        sourceAccountId = sourceAccountId(),
+        destinationAccountId = destinationAccountId(),
+        categoryId = categoryId,
+        notes = notes,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        tagNames = tagNames,
+        paymentMethod = paymentMethod
     )
 
     companion object {

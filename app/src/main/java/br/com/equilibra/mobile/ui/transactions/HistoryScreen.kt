@@ -52,7 +52,8 @@ import br.com.equilibra.mobile.ui.components.ListLoading
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
-    onTransactionClick: ((String) -> Unit)? = null,
+    /** Task 4.12 — detalhe por ID: rota leva tipo + id (backend não tem /transactions/{id}). */
+    onTransactionClick: ((String, String) -> Unit)? = null,
     viewModel: HistoryViewModel = hiltViewModel(),
     labelsViewModel: HistoryLabelsViewModel = hiltViewModel()
 ) {
@@ -128,7 +129,7 @@ private fun HistoryContent(
     onClearFilters: () -> Unit,
     onRefresh: () -> Unit,
     onLoadMore: () -> Unit,
-    onItemClick: ((String) -> Unit)?,
+    onItemClick: ((String, String) -> Unit)?,
     onTransactionClickAvailable: Boolean
 ) {
     val hasFilters = state.filters != HistoryFilters.empty()
@@ -197,8 +198,8 @@ private fun HistoryContent(
                                 ?.let { accountNames[it] },
                             categoryName = item.categoryId?.let { categoryNames[it] },
                             leadingDetail = HistoryFilterOptions.typeLabel(item.type),
-                            onClick = { onItemClick?.invoke(item.id) },
-                            // Detalhe por ID chega na Task 4.12; sem destino, sem clique
+                            onClick = { onItemClick?.invoke(item.type, item.id) },
+                            // Sem destino registrado (fora da rota do histórico), sem clique
                             clickable = onTransactionClickAvailable
                         )
                     }

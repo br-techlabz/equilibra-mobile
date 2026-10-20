@@ -536,6 +536,120 @@ class TransactionRepositoryTest {
         assertEquals(0, dao.getAll().size)
     }
 
+    // ---------- detalhe por ID (Task 4.12) ----------
+
+    @Test
+    fun getDetailDespesaUsaEndpointDoTipoEMapeiaOrigem() = runTest {
+        coEvery { expenseApi.get("e1") } returns Response.success(
+            expenseDto(id = "e1", description = "Mercado", amount = "42.90")
+        )
+
+        val result = repository.getDetail("EXPENSE", "e1")
+
+        assertTrue(result is ApiResult.Success)
+        val detail = (result as ApiResult.Success).data
+        assertEquals("e1", detail.id)
+        assertEquals("EXPENSE", detail.type)
+        assertEquals("Mercado", detail.description)
+        assertEquals("42.90", detail.amount)
+        assertEquals("acc-1", detail.sourceAccountId)
+        assertEquals(null, detail.destinationAccountId)
+        assertEquals("cat-1", detail.categoryId)
+        assertEquals("ACTIVE", detail.status)
+        assertEquals(0, dao.getAll().size) // detalhe não é cache
+    }
+
+    @Test
+    fun getDetailReceitaUsaDestinoComoConta() = runTest {
+        coEvery { incomeApi.get("i1") } returns Response.success(
+            incomeDto(id = "i1", description = "Salário")
+        )
+
+        val result = repository.getDetail("INCOME", "i1")
+
+        assertTrue(result is ApiResult.Success)
+        val detail = (result as ApiResult.Success).data
+        assertEquals("INCOME", detail.type)
+        assertEquals("acc-2", detail.destinationAccountId)
+        assertEquals(null, detail.sourceAccountId)
+    }
+
+    @Test
+    fun getDetailTransferenciaTrazOrigemEDestino() = runTest {
+        coEvery { transferApi.get("tr1") } returns Response.success(
+            transferDto(id = "tr1", description = "Poupança")
+        )
+
+        val result = repository.getDetail("TRANSFER", "tr1")
+
+        assertTrue(result is ApiResult.Success)
+        val detail = (result as ApiResult.Success).data
+        assertEquals("acc-1", detail.sourceAccountId)
+        assertEquals("acc-2", detail.destinationAccountId)
+    }
+
+    @Test
+    fun getDetailMapeiaTagsComoNomesOrdenados() = runTest {
+        coEvery { expenseApi.get("e1") } returns Response.success(
+            expenseDto(id = "e1").copy(
+                tags = listOf(TagSummaryDto("t1", "mercado", true), TagSummaryDto("t2", "cartao", true))
+            )
+        )
+
+        val result = repository.getDetail("EXPENSE", "e1")
+
+        val detail = (result as ApiResult.Success).data
+        assertEquals(listOf("mercado", "cartao"), detail.tagNames)
+    }
+
+    @Test
+    fun getDetailCanceladaRefleteStatusDoBackend() = runTest {
+        coEvery { expenseApi.get("e1") } returns Response.success(
+            expenseDto(id = "e1", status = "CANCELLED")
+        )
+
+        val result = repository.getDetail("EXPENSE", "e1")
+
+        val detail = (result as ApiResult.Success).data
+        assertEquals("CANCELLED", detail.status)
+        assertTrue(!detail.canEdit)
+        assertTrue(!detail.canCancel)
+    }
+
+    @Test
+    fun getDetailTipoSemEndpointRetornaErroSemChamarApi() = runTest {
+        coEvery { expenseApi.get(any()) } returns Response.success(expenseDto(id = "e1"))
+        coEvery { incomeApi.get(any()) } returns Response.success(incomeDto(id = "i1"))
+        coEvery { transferApi.get(any()) } returns Response.success(transferDto(id = "tr1"))
+
+        val result = repository.getDetail("STATEMENT_PAYMENT", "sp1")
+
+        assertTrue(result is ApiResult.UnknownError)
+        coVerify(exactly = 0) { expenseApi.get(any()) }
+        coVerify(exactly = 0) { incomeApi.get(any()) }
+        coVerify(exactly = 0) { transferApi.get(any()) }
+    }
+
+    @Test
+    fun getDetailHttpErrorNaoEscreveNoCache() = runTest {
+        coEvery { expenseApi.get("e1") } returns Response.error(404, "not found".toResponseBody())
+
+        val result = repository.getDetail("EXPENSE", "e1")
+
+        assertTrue(result is ApiResult.HttpError)
+        assertEquals(404, (result as ApiResult.HttpError).code)
+        assertEquals(0, dao.getAll().size)
+    }
+
+    @Test
+    fun getDetailRedeForaRetornaNetworkError() = runTest {
+        coEvery { expenseApi.get("e1") } throws IOException("offline")
+
+        val result = repository.getDetail("EXPENSE", "e1")
+
+        assertTrue(result is ApiResult.NetworkError)
+    }
+
     companion object {
         private var seq = 0
     }
