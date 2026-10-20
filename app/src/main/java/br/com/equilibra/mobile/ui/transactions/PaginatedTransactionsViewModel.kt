@@ -40,8 +40,15 @@ sealed class TransactionsListUiState {
  * deduplicação, refresh, toggle de canceladas, estados e mapas de nomes
  * do Room. Subclasses fornecem o fetch da página e o rótulo do tipo.
  */
+/**
+ * @repository é `protected val` de propósito: o [init] chama o método
+ * abstrato [fetchPage] das subclasses, e em device (Main.immediate) isso
+ * roda de forma síncrona DURANTE a construção — campos próprios das
+ * subclasses ainda seriam null (NPE real ao abrir Despesas/Receitas).
+ * Subclasses devem usar este campo, nunca declarar outro `repository`.
+ */
 abstract class PaginatedTransactionsViewModel(
-    private val repository: TransactionRepository,
+    protected val repository: TransactionRepository,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository
 ) : ViewModel() {

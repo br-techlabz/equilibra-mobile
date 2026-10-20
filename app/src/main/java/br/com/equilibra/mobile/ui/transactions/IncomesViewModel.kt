@@ -16,7 +16,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class IncomesViewModel @Inject constructor(
-    private val repository: TransactionRepository,
+    // sem `private val`: usa o repository protected da base (ver nota lá —
+    // campo próprio da subclasse seria null no init da superclasse em device)
+    repository: TransactionRepository,
     accountRepository: AccountRepository,
     categoryRepository: CategoryRepository
 ) : PaginatedTransactionsViewModel(repository, accountRepository, categoryRepository) {

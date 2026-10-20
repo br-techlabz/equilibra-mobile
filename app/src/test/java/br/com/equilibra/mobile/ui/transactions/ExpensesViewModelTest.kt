@@ -19,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -72,6 +73,28 @@ class ExpensesViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    /**
+     * Regressão do crash real no emulador (NPE ao abrir Despesas).
+     *
+     * Em device o viewModelScope usa Main.immediate: o init da superclasse
+     * executa fetchPage de forma síncrona DURANTE a construção, antes de
+     * ExpensesViewModel atribuir seu próprio campo `repository` → NPE.
+     * O StandardTestDispatcher mascara o bug (launch enfileirado roda só
+     * após a construção); UnconfinedTestDispatcher reproduz o device.
+     */
+    @Test
+    fun construcaoComDispatcherImediatoExecutaFetchSemNPE() {
+        Dispatchers.setMain(UnconfinedTestDispatcher())
+        try {
+            ExpensesViewModel(repository, accountRepository, categoryRepository)
+
+            // Deve ter chamado o fetch sem estourar NullPointerException
+            coVerify(exactly = 1) { repository.listExpenses(any(), any(), any()) }
+        } finally {
+            Dispatchers.setMain(testDispatcher)
+        }
     }
 
     private fun vmWithSuccess(result: ApiResult<TransactionPage>): ExpensesViewModel {
