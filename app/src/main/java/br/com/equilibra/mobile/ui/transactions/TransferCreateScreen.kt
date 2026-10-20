@@ -125,13 +125,14 @@ fun TransferCreateScreen(
 
             AccountSelector(
                 selectedId = state.sourceAccountId,
-                onSelectionChange = viewModel::onSourceAccountChange
+                // Obrigatórias: retap (null) é ignorado — validação exige no envio
+                onSelectionChange = { id -> if (id != null) viewModel.onSourceAccountChange(id) }
             )
             state.sourceAccountError?.let { FieldError(it) }
 
             AccountSelector(
                 selectedId = state.destinationAccountId,
-                onSelectionChange = viewModel::onDestinationAccountChange
+                onSelectionChange = { id -> if (id != null) viewModel.onDestinationAccountChange(id) }
             )
             state.destinationAccountError?.let { FieldError(it) }
 

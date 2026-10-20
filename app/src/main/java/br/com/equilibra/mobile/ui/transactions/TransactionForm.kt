@@ -143,7 +143,9 @@ fun TransactionForm(
 
         AccountSelector(
             selectedId = state.accountId,
-            onSelectionChange = onAccountChange
+            // Conta obrigatória: retap envia null (limpa) — ignorado aqui;
+            // a validação exige a conta no envio
+            onSelectionChange = { id -> if (id != null) onAccountChange(id) }
         )
         state.accountError?.let {
             Text(

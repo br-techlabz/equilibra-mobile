@@ -161,13 +161,20 @@ internal fun TransactionRow(
     item: TransactionEntity,
     accountName: String?,
     categoryName: String?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    /** Detalhe inicial (ex.: tipo no histórico unificado da Task 4.11). */
+    leadingDetail: String? = null,
+    /** false quando ainda não existe tela de destino (nenhuma ação aparente). */
+    clickable: Boolean = true
 ) {
     val cancelled = item.status == "CANCELLED"
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(role = Role.Button, onClick = onClick)
+            .then(
+                if (clickable) Modifier.clickable(role = Role.Button, onClick = onClick)
+                else Modifier
+            )
             .semantics {
                 contentDescription =
                     "${item.description}, ${MoneyFormatter.format(item.amount)}" +
@@ -202,6 +209,7 @@ internal fun TransactionRow(
                     overflow = TextOverflow.Ellipsis
                 )
                 val details = listOfNotNull(
+                    leadingDetail,
                     formatOccurredDate(item.occurredAt),
                     categoryName,
                     accountName

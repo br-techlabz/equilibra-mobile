@@ -42,6 +42,7 @@ import br.com.equilibra.mobile.ui.transactions.CreateIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.EditExpenseScreen
 import br.com.equilibra.mobile.ui.transactions.EditIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.ExpensesScreen
+import br.com.equilibra.mobile.ui.transactions.HistoryScreen
 import br.com.equilibra.mobile.ui.transactions.IncomesScreen
 import br.com.equilibra.mobile.ui.transactions.TransactionsScreen
 import br.com.equilibra.mobile.ui.transactions.TransferCreateScreen
@@ -137,6 +138,13 @@ private fun MainTabsNavHost(
                 onAccountClick = { id -> navController.navigate("accounts/$id/edit") },
                 onCreateClick = { navController.navigate("accounts/create") }
             )
+        }
+
+        // Task 4.11 — histórico unificado (lê /transactions, sem cache).
+        // O detalhe por ID é a Task 4.12: ainda não existe rota, então o
+        // item não navega (nenhum link quebrado).
+        composable("history") {
+            HistoryScreen()
         }
 
         composable("accounts/create") {
@@ -285,6 +293,7 @@ private fun MainTabsNavHost(
                 onExpenses = { navController.navigate("expenses") },
                 onIncomes = { navController.navigate("incomes") },
                 onTransfers = { navController.navigate("transfers/create") },
+                onHistory = { navController.navigate("history") },
                 onLogout = {
                     homeViewModel.onLogout(onLoggedOut)
                 }

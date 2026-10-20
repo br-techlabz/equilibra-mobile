@@ -103,4 +103,14 @@ class TransactionFormValidatorTest {
         assertEquals("2026-10-01T00:00:00Z", TransactionFormValidator.toInstantIso("01/10/2026"))
         assertNull(TransactionFormValidator.toInstantIso("inválida"))
     }
+
+    @Test
+    fun toInstantEndOfDayIsoFechaODia() {
+        // BETWEEN no backend é inclusivo: "ate" precisa cobrir o dia inteiro
+        assertEquals(
+            "2026-10-31T23:59:59.999999999Z",
+            TransactionFormValidator.toInstantEndOfDayIso("31/10/2026")
+        )
+        assertNull(TransactionFormValidator.toInstantEndOfDayIso("inválida"))
+    }
 }

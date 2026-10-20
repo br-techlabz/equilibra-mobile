@@ -60,4 +60,18 @@ class CategorySelectorViewModelTest {
         viewModel.categories("BOTH").first()
         assertFalse(viewModel.isLoading.value)
     }
+
+    @Test
+    fun `sem aplicabilidade retorna todas as categorias ativas`() = runTest {
+        // Filtro do histórico (Task 4.11): sem recorte por EXPENSE/INCOME
+        every { repository.observeCategories(null) } returns flowOf(listOf(
+            entity("1", "Mercado", applicability = "EXPENSE"),
+            entity("2", "Salário", applicability = "INCOME")
+        ))
+
+        val result = viewModel.categories().first()
+
+        assertEquals(listOf("1", "2"), result.map { it.id })
+        verify { repository.observeCategories(null) }
+    }
 }

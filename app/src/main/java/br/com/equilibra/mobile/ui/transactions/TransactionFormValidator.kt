@@ -76,6 +76,20 @@ object TransactionFormValidator {
         null
     }
 
+    /**
+     * Fim do dia em UTC — o BETWEEN do backend é inclusivo, então o
+     * filtro "até" precisa cobrir o dia inteiro (Task 4.11).
+     */
+    fun toInstantEndOfDayIso(ddMMyyyy: String): String? = try {
+        parseDate(ddMMyyyy)
+            .atTime(23, 59, 59, 999_999_999)
+            .atZone(ZoneOffset.UTC)
+            .toInstant()
+            .toString()
+    } catch (_: Exception) {
+        null
+    }
+
     /** Instant ISO-8601 → dd/MM/yyyy (exibição no formulário de edição). */
     fun toDisplayDate(isoInstant: String): String = try {
         java.time.Instant.parse(isoInstant)

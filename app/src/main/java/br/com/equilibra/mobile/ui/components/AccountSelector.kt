@@ -22,17 +22,20 @@ import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 /**
- * Task 4.4 — Seletor de conta (Room-first), mesmos padrões dos seletores
- * de categoria/tag da Task 3.13.
+ * Task 4.4/4.11 — Seletor de conta (Room-first), mesmos padrões dos
+ * seletores de categoria/tag da Task 3.13.
  *
  * - Consulta o cache local (Room) via [AccountSelectorViewModel]; sem rede.
  * - Exibe apenas contas ativas.
- * - A seleção retorna o ID estável da conta via onSelectionChange.
+ * - Seleção única com toggle: tocar na selecionada envia null (limpa) —
+ *   em formulários (conta obrigatória) o consumidor ignora o null e a
+ *   validação exige a conta; no filtro do histórico (4.11) o null zera
+ *   o filtro ("qualquer conta").
  */
 @Composable
 fun AccountSelector(
     selectedId: String?,
-    onSelectionChange: (String) -> Unit,
+    onSelectionChange: (String?) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AccountSelectorViewModel = hiltViewModel()
 ) {
@@ -55,8 +58,9 @@ fun AccountSelector(
         emptyMessage = "Nenhuma conta ativa disponível",
         optionTagPrefix = "account",
         onToggle = { id ->
-            // Seleção única: tocar na conta selecionada a mantém (conta é obrigatória)
-            if (id != selectedId) onSelectionChange(id)
+            onSelectionChange(
+                SelectionLogic.toggle(listOfNotNull(selectedId), id, multiSelect = false).firstOrNull()
+            )
         },
         modifier = modifier
     )

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Security
@@ -79,6 +80,7 @@ fun MoreScreen(
     onExpenses: () -> Unit = {},
     onIncomes: () -> Unit = {},
     onTransfers: () -> Unit = {},
+    onHistory: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val comingSoonMessage = "Em breve"
@@ -120,6 +122,12 @@ fun MoreScreen(
             label = "Transferências",
             subtitle = "Transferir entre contas",
             onClick = onTransfers
+        ),
+        MoreMenuItem(
+            icon = Icons.Default.History,
+            label = "Histórico",
+            subtitle = "Todas as transações com filtros",
+            onClick = onHistory
         ),
         MoreMenuItem(
             icon = Icons.Default.Notifications,

@@ -12,6 +12,7 @@ import br.com.equilibra.mobile.data.remote.TransferApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
 import br.com.equilibra.mobile.data.remote.TagApi
 import br.com.equilibra.mobile.data.remote.TokenAuthenticator
+import br.com.equilibra.mobile.data.remote.TransactionHistoryApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -106,4 +107,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideTransferApi(retrofit: Retrofit): TransferApi = retrofit.create(TransferApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideTransactionHistoryApi(retrofit: Retrofit): TransactionHistoryApi =
+        retrofit.create(TransactionHistoryApi::class.java)
 }

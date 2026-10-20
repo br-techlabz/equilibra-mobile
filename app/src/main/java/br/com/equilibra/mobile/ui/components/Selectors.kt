@@ -39,7 +39,8 @@ import br.com.equilibra.mobile.data.local.tag.TagEntity
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CategorySelector(
-    applicability: String,
+    /** null = todas as categorias ativas (filtro do histórico, Task 4.11). */
+    applicability: String?,
     selectedIds: List<String>,
     onSelectionChange: (List<String>) -> Unit,
     multiSelect: Boolean = false,
@@ -50,7 +51,10 @@ fun CategorySelector(
     var categories by remember { mutableStateOf<List<CategoryEntity>?>(null) }
 
     LaunchedEffect(applicability) {
-        viewModel.categories(applicability).collect { categories = it }
+        // applicability nula = todas as ativas (filtro do histórico, Task 4.11)
+        val flow = if (applicability == null) viewModel.categories()
+        else viewModel.categories(applicability)
+        flow.collect { categories = it }
     }
 
     SelectorChipList(
