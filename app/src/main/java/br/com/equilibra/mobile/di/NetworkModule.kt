@@ -7,6 +7,7 @@ import br.com.equilibra.mobile.data.remote.CategoryApi
 import br.com.equilibra.mobile.data.remote.AssetAccountApi
 import br.com.equilibra.mobile.data.remote.AttachmentApi
 import br.com.equilibra.mobile.data.remote.CreditCardApi
+import br.com.equilibra.mobile.data.remote.PurchaseApi
 import br.com.equilibra.mobile.data.remote.DashboardApi
 import br.com.equilibra.mobile.data.remote.ExpenseApi
 import br.com.equilibra.mobile.data.remote.IncomeApi
@@ -126,4 +127,10 @@ object NetworkModule {
     @Singleton
     fun provideCreditCardApi(retrofit: Retrofit): CreditCardApi =
         retrofit.create(CreditCardApi::class.java)
+
+    /** Task 6.6 — compras de cartão de crédito. */
+    @Provides
+    @Singleton
+    fun providePurchaseApi(retrofit: Retrofit): PurchaseApi =
+        retrofit.create(PurchaseApi::class.java)
 }

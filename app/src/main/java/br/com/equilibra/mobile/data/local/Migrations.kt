@@ -130,5 +130,68 @@ object Migrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+    /**
+     * Task 6.6 — Tabelas `credit_card_purchases` e `purchase_installments`.
+     * Índices e FK espelham o que a Entity declara (Room valida o schema).
+     */
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `credit_card_purchases` (
+                    `id` TEXT NOT NULL,
+                    `creditCardId` TEXT NOT NULL,
+                    `categoryId` TEXT NOT NULL,
+                    `description` TEXT NOT NULL,
+                    `totalAmount` TEXT NOT NULL,
+                    `purchaseDate` TEXT NOT NULL,
+                    `purchaseAt` TEXT,
+                    `installmentCount` INTEGER NOT NULL,
+                    `cycleMonth` TEXT NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `createdAt` TEXT NOT NULL,
+                    `updatedAt` TEXT NOT NULL,
+                    `syncedAt` INTEGER,
+                    PRIMARY KEY(`id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_credit_card_purchases_creditCardId_purchaseDate` " +
+                    "ON `credit_card_purchases` (`creditCardId`, `purchaseDate`)"
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_credit_card_purchases_purchaseDate` " +
+                    "ON `credit_card_purchases` (`purchaseDate`)"
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `purchase_installments` (
+                    `id` TEXT NOT NULL,
+                    `purchaseId` TEXT NOT NULL,
+                    `sequenceNumber` INTEGER NOT NULL,
+                    `totalInstallments` INTEGER NOT NULL,
+                    `principalAmount` TEXT NOT NULL,
+                    `cycleMonth` TEXT NOT NULL,
+                    PRIMARY KEY(`id`),
+                    FOREIGN KEY(`purchaseId`) REFERENCES `credit_card_purchases`(`id`)
+                        ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_purchase_installments_purchaseId` " +
+                    "ON `purchase_installments` (`purchaseId`)"
+            )
+        }
+    }
+
+    val ALL = arrayOf(
+        MIGRATION_1_2,
+        MIGRATION_2_3,
+        MIGRATION_3_4,
+        MIGRATION_4_5,
+        MIGRATION_5_6,
+        MIGRATION_6_7
+    )
 }

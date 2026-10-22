@@ -8,6 +8,9 @@ import br.com.equilibra.mobile.data.local.category.CategoryDao
 import br.com.equilibra.mobile.data.local.category.CategoryEntity
 import br.com.equilibra.mobile.data.local.creditcard.CreditCardDao
 import br.com.equilibra.mobile.data.local.creditcard.CreditCardEntity
+import br.com.equilibra.mobile.data.local.purchase.InstallmentEntity
+import br.com.equilibra.mobile.data.local.purchase.PurchaseDao
+import br.com.equilibra.mobile.data.local.purchase.PurchaseEntity
 import br.com.equilibra.mobile.data.local.tag.TagDao
 import br.com.equilibra.mobile.data.local.tag.TagEntity
 import br.com.equilibra.mobile.data.local.transaction.TransactionDao
@@ -16,7 +19,8 @@ import br.com.equilibra.mobile.data.local.transaction.TransactionEntity
 /**
  * Task 6.1 — EquilibraDatabase v6
  *
- * - Banco: equilibra.db, version = 6 (contas + categorias + tags + transações + cartões)
+ * - Banco: equilibra.db, version = 7 (contas + categorias + tags + transações +
+ *   cartões + compras de cartão)
  * - Migrations explícitas (Migrations.ALL); sem fallback destrutivo em produção.
  */
 @Database(
@@ -25,9 +29,11 @@ import br.com.equilibra.mobile.data.local.transaction.TransactionEntity
         CategoryEntity::class,
         TagEntity::class,
         TransactionEntity::class,
-        CreditCardEntity::class
+        CreditCardEntity::class,
+        PurchaseEntity::class,
+        InstallmentEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = []
 )
@@ -44,8 +50,11 @@ abstract class EquilibraDatabase : RoomDatabase() {
     /** Task 6.1 — cache local de cartões (API-first, Task 6.2). */
     abstract fun creditCardDao(): CreditCardDao
 
+    /** Task 6.6 — compras de cartão e suas parcelas. */
+    abstract fun purchaseDao(): PurchaseDao
+
     companion object {
         const val DATABASE_NAME = "equilibra.db"
-        const val DATABASE_VERSION = 6
+        const val DATABASE_VERSION = 7
     }
 }

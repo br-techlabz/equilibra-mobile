@@ -32,8 +32,8 @@ class EquilibraDatabaseTest {
         val dao = db.openHelper
         assertTrue(dao.readableDatabase.isOpen)
 
-        // Versão atual = 6 (Task 6.1: + cartões de crédito)
-        assertEquals(6, EquilibraDatabase.DATABASE_VERSION)
+        // Versão atual = 7 (Task 6.6: + compras de cartão)
+        assertEquals(7, EquilibraDatabase.DATABASE_VERSION)
         assertEquals("equilibra.db", EquilibraDatabase.DATABASE_NAME)
 
         db.close()
@@ -45,8 +45,8 @@ class EquilibraDatabaseTest {
     }
 
     @Test
-    fun databaseVersionIsSix() {
-        assertEquals(6, EquilibraDatabase.DATABASE_VERSION)
+    fun databaseVersionIsSeven() {
+        assertEquals(7, EquilibraDatabase.DATABASE_VERSION)
     }
 
     @Test
@@ -279,6 +279,64 @@ class EquilibraDatabaseTest {
             assertTrue("Tabela transactions deve continuar existindo", c.count > 0)
         }
         dbV6.close()
+        context.getDatabasePath(dbName)?.delete()
+    }
+
+    @Test
+    fun migration6To7CreatesPurchaseTables() {
+        val dbName = "test-migration-6-7.db"
+        context.getDatabasePath(dbName)?.delete()
+        // Passo 1: cria fisicamente um DB v6 (o schema entregue pela Task 6.1)
+        run {
+            val helper = androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory().create(
+                androidx.sqlite.db.SupportSQLiteOpenHelper.Configuration.builder(context)
+                    .name(dbName)
+                    .callback(object : androidx.sqlite.db.SupportSQLiteOpenHelper.Callback(6) {
+                        override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `accounts` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `initialBalance` TEXT NOT NULL, `currentBalance` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `categories` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `applicability` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `tags` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `active` INTEGER NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `transactions` (`id` TEXT NOT NULL, `type` TEXT NOT NULL, `status` TEXT NOT NULL, `description` TEXT NOT NULL, `occurredAt` TEXT NOT NULL, `amount` TEXT NOT NULL, `categoryId` TEXT, `sourceAccountId` TEXT, `destinationAccountId` TEXT, `notes` TEXT, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL(
+                                "CREATE TABLE IF NOT EXISTS `credit_cards` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `institution` TEXT NOT NULL, `nickname` TEXT, `totalLimit` TEXT NOT NULL, `committedLimit` TEXT NOT NULL, `reservedLimit` TEXT NOT NULL, `availableLimit` TEXT NOT NULL, `closingDay` INTEGER NOT NULL, `dueDay` INTEGER NOT NULL, `timezone` TEXT NOT NULL, `status` TEXT NOT NULL, `createdAt` TEXT NOT NULL, `updatedAt` TEXT NOT NULL, `syncedAt` INTEGER, PRIMARY KEY(`id`))"
+                            )
+                            db.execSQL("CREATE INDEX IF NOT EXISTS `index_tags_name` ON `tags` (`name`)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_type` ON `transactions` (`type`)")
+                            db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_occurredAt` ON `transactions` (`occurredAt`)")
+                            // cartão existente: deve sobreviver à migration
+                            db.execSQL("INSERT INTO `credit_cards` (`id`, `name`, `institution`, `totalLimit`, `committedLimit`, `reservedLimit`, `availableLimit`, `closingDay`, `dueDay`, `timezone`, `status`, `createdAt`, `updatedAt`) VALUES ('c1', 'Nubank', 'Nubank', '1000.00', '0.00', '0.00', '1000.00', 25, 2, 'America/Sao_Paulo', 'ACTIVE', '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')")
+                        }
+                        override fun onUpgrade(db: androidx.sqlite.db.SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+                    }).build()
+            )
+            helper.writableDatabase.close()
+            helper.close()
+        }
+        // Passo 2: abre como v7 com migrations
+        val dbV7 = Room.databaseBuilder(
+            context,
+            EquilibraDatabase::class.java,
+            dbName
+        ).allowMainThreadQueries().addMigrations(*Migrations.ALL).build()
+        dbV7.openHelper.writableDatabase
+        listOf("credit_card_purchases", "purchase_installments").forEach { table ->
+            dbV7.openHelper.readableDatabase.query("SELECT name FROM sqlite_master WHERE type='table' AND name='$table'").use { c ->
+                assertTrue("Tabela $table deve existir após MIGRATION_6_7", c.count > 0)
+            }
+        }
+        // Dados e cartões da v6 sobrevivem
+        dbV7.openHelper.readableDatabase.query("SELECT name FROM credit_cards WHERE id='c1'").use { c ->
+            assertEquals("Cartão da v6 deve sobreviver à migration", 1, c.count)
+        }
+        dbV7.close()
         context.getDatabasePath(dbName)?.delete()
     }
 
