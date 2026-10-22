@@ -1,5 +1,6 @@
 package br.com.equilibra.mobile.data
 
+import br.com.equilibra.mobile.data.local.EquilibraDatabase
 import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.data.remote.AuthApi
 import br.com.equilibra.mobile.data.remote.PersistentCookieJar
@@ -15,7 +16,8 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val sessionManager: SessionManager,
-    private val cookieJar: PersistentCookieJar
+    private val cookieJar: PersistentCookieJar,
+    private val database: EquilibraDatabase
 ) {
     suspend fun login(email: String, password: String): ApiResult<Unit> {
         val result = safeApiCall { authApi.login(LoginRequestDto(email, password)) }
@@ -67,6 +69,10 @@ class AuthRepository @Inject constructor(
         try { authApi.logout() } catch (_: Exception) { /* ignora */ }
         sessionManager.clearSession()
         cookieJar.clear()
+        // O cache Room é por conta: sem isso, os dados de quem saiu aparecem
+        // para o próximo usuário (bug real: categorias de outra conta no
+        // seletor de um usuário recém-criado).
+        database.clearAllTables()
         return ApiResult.Success(Unit)
     }
 
