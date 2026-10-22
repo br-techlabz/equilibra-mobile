@@ -1,0 +1,100 @@
+# Sprint 6 — Cartões e Compras
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 6.1 — CreditCardEntity, DAO, API e DTOs
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.1 — CreditCardEntity, DAO, API e DTOs** do Equilibra Mobile. Objetivo: Criar camadas de dados de cartão. Use limite como decimal em String no Room; campos instituição, apelido, fechamento, vencimento, timezone e status; inspecione contrato real.
+>
+> Critérios de aceite: DAO/API/DTOs testados; valores precisos.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.2 — CreditCardRepository
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.2 — CreditCardRepository** do Equilibra Mobile. Objetivo: Implementar API-first e cache Room para cartões. Implemente cache-first para leitura e sincronização pós-escrita; calcule limite disponível somente se o contrato indicar os dados necessários, evitando fórmula divergente do backend.
+>
+> Critérios de aceite: Testes de sincronização e falhas.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.3 — Lista de cartões
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.3 — Lista de cartões** do Equilibra Mobile. Objetivo: Exibir limite total, disponível e status. Use dados do backend; cartões ativos/inativos claros; empty/loading/error/refresh; acessibilidade para limite utilizado/disponível.
+>
+> Critérios de aceite: Lista reflete API e atualiza cache.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.4 — Criar cartão
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.4 — Criar cartão** do Equilibra Mobile. Objetivo: Formulário para nome, instituição, limite, fechamento, vencimento e timezone. Validar limite positivo, dias válidos segundo regras reais e timezone suportado; usar seletores adequados e evitar assumir fechamento antes do vencimento sem contrato.
+>
+> Critérios de aceite: Criação remota e validações; erros de backend apresentados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.5 — Editar e ativar/desativar cartão
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.5 — Editar e ativar/desativar cartão** do Equilibra Mobile. Objetivo: Implementar gestão de cartão. Reutilize formulário e confirme desativação; preserve compras/faturas existentes; não apague dados ao desativar.
+>
+> Critérios de aceite: Edição/status sincronizados e testados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.6 — PurchaseEntity, DAO, API e DTOs
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.6 — PurchaseEntity, DAO, API e DTOs** do Equilibra Mobile. Objetivo: Criar camada de compras de cartão. Modele compra parcelada com card ID, categoria, descrição, valor total, data, quantidade até 60, ciclo e status; confirme o formato real de parcelas na API.
+>
+> Critérios de aceite: Persistência e parsing testados; decimal sem perda.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.7 — PurchaseRepository
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.7 — PurchaseRepository** do Equilibra Mobile. Objetivo: Implementar cache e sincronização de compras. API como fonte da verdade; sincronizar por cartão e após criar/cancelar; evitar atualizar compras localmente antes da confirmação.
+>
+> Critérios de aceite: Cache consistente e testes de falha.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.8 — Lista e cadastro de compras
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.8 — Lista e cadastro de compras** do Equilibra Mobile. Objetivo: Exibir compras por cartão, criar compra parcelada de 1 a 60 vezes e cancelar. Validar parcelas 1–60; apresentar valor total e dados de ciclo conforme backend; não calcular regra de fatura independentemente do servidor.
+>
+> Critérios de aceite: Lista filtrada por cartão; criação/cancelamento sincronizados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 6.9 — Detalhe da compra
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 6.9 — Detalhe da compra** do Equilibra Mobile. Objetivo: Exibir parcelas, valores e ciclo da compra. Use resposta real da API; identifique valor total e valores/ciclos de parcelas sem inferir campos ausentes; trate compra cancelada.
+>
+> Critérios de aceite: Detalhe acessível e consistente com backend.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
