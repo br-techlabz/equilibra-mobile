@@ -110,6 +110,9 @@ dependencies {
     // Gráficos
     implementation(libs.mpandroidchart)
 
+    // Imagens (preview de anexos — Task 5.4)
+    implementation(libs.coil.compose)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Testes unitários

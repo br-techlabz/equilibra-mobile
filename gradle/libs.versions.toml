@@ -21,6 +21,7 @@ junit = "4.13.2"
 mockwebserver = "4.12.0"
 turbine = "1.1.0"
 mp-android-chart = "3.1.0"
+coil = "2.7.0"
 testCore = "1.5.0"
 testRunner = "1.5.2"
 robolectric = "4.14.1"
@@ -56,6 +57,7 @@ retrofit-serialization = { group = "com.jakewharton.retrofit", name = "retrofit2
 okhttp-core = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "mockwebserver" }
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 junit-junit = { group = "junit", name = "junit", version.ref = "junit" }
 turbine-turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mp-android-chart" }
