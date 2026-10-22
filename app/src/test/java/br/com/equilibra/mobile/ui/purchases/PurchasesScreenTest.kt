@@ -212,4 +212,21 @@ class PurchasesScreenTest {
         compose.onNodeWithText("Parcelas devem ser entre 1 e 60").assertIsDisplayed()
         coVerify(exactly = 0) { repository.create(any(), any(), any(), any(), any(), any(), any()) }
     }
+
+    @Test
+    fun tocarNaCompraAbreODetalhe() {
+        every { repository.observeByCard("c1") } returns flowOf(listOf(entity()))
+        var aberto: String? = null
+        val vm = purchasesViewModel()
+
+        compose.setContent {
+            PurchasesScreen(onBack = {}, onPurchaseClick = { aberto = it }, viewModel = vm)
+        }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Notebook").performClick()
+        compose.waitForIdle()
+
+        assertEquals("p1", aberto)
+    }
 }

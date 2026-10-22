@@ -35,6 +35,7 @@ import br.com.equilibra.mobile.ui.cards.CardsScreen
 import br.com.equilibra.mobile.ui.cards.CreateCreditCardScreen
 import br.com.equilibra.mobile.ui.cards.EditCreditCardScreen
 import br.com.equilibra.mobile.ui.purchases.CreatePurchaseScreen
+import br.com.equilibra.mobile.ui.purchases.PurchaseDetailScreen
 import br.com.equilibra.mobile.ui.purchases.PurchasesScreen
 import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
@@ -233,8 +234,22 @@ private fun MainTabsNavHost(
             val cardId = entry.arguments?.getString("cardId").orEmpty()
             PurchasesScreen(
                 onBack = { navController.popBackStack() },
+                onPurchaseClick = { purchaseId ->
+                    navController.navigate("cards/$cardId/purchases/$purchaseId")
+                },
                 onCreateClick = { navController.navigate("cards/$cardId/purchases/create") }
             )
+        }
+
+        // Task 6.9 — detalhe da compra
+        composable(
+            route = "cards/{cardId}/purchases/{purchaseId}",
+            arguments = listOf(
+                navArgument("cardId") { type = NavType.StringType },
+                navArgument("purchaseId") { type = NavType.StringType }
+            )
+        ) {
+            PurchaseDetailScreen(onBack = { navController.popBackStack() })
         }
 
         // Task 6.8 — nova compra parcelada

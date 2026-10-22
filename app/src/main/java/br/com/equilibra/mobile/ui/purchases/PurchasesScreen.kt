@@ -1,5 +1,6 @@
 package br.com.equilibra.mobile.ui.purchases
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,6 +57,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun PurchasesScreen(
     onBack: () -> Unit,
+    /** Task 6.9 — abrir o detalhe da compra (nulo = item não navega). */
+    onPurchaseClick: ((String) -> Unit)? = null,
     onCreateClick: (() -> Unit)? = null,
     viewModel: PurchasesViewModel = hiltViewModel()
 ) {
@@ -117,6 +121,7 @@ fun PurchasesScreen(
                         items(state.purchases, key = { it.id }) { purchase ->
                             PurchaseRow(
                                 purchase = purchase,
+                                onClick = onPurchaseClick?.let { open -> { open(purchase.id) } },
                                 onCancel = { viewModel.onCancelClick(purchase.id) }
                             )
                         }
@@ -156,7 +161,11 @@ fun PurchasesScreen(
 private val isoDate: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
 @Composable
-private fun PurchaseRow(purchase: PurchaseEntity, onCancel: () -> Unit) {
+private fun PurchaseRow(
+    purchase: PurchaseEntity,
+    onClick: (() -> Unit)?,
+    onCancel: () -> Unit
+) {
     val active = purchase.status == PurchaseStatusDto.ACTIVE
     val total = MoneyFormatter.format(purchase.totalAmount)
     val data = runCatching { LocalDate.parse(purchase.purchaseDate, isoDate) }.getOrNull()
@@ -167,14 +176,18 @@ private fun PurchaseRow(purchase: PurchaseEntity, onCancel: () -> Unit) {
     val parcelas = if (purchase.installmentCount > 1) "${purchase.installmentCount}x" else "à vista"
 
     Card(
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
             .fillMaxWidth()
             .semantics {
                 contentDescription = "${purchase.description}: $total em $parcelas, " +
                     "compra em $dataTexto, fatura de $cicloTexto, " +
                     "status ${PurchaseStatusDto.labelPtBr(purchase.status)}"
-            },
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            }
+            .then(
+                if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick)
+                else Modifier
+            )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(

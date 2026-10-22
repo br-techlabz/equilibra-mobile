@@ -260,6 +260,52 @@ class PurchaseRepositoryTest {
         assertEquals("ACTIVE", dao.getPurchaseById("p1")!!.status)
     }
 
+    // detalhe
+
+    @Test
+    fun refreshByIdGravaCompraEParcelas() = runTest {
+        coEvery { api.get("p1") } returns Response.success(dto(id = "p1"))
+
+        val result = repository.refreshById("p1")
+
+        assertTrue(result is ApiResult.Success)
+        assertEquals("p1", dao.getPurchaseById("p1")!!.id)
+        assertEquals(listOf("50.01", "49.99"), dao.getInstallments("p1").map { it.principalAmount })
+    }
+
+    @Test
+    fun refreshByIdCom404PreservaCacheEPropaga() = runTest {
+        seed(entity(id = "p1"))
+        coEvery { api.get("p1") } returns Response.error(404, "nf".toResponseBody())
+
+        val result = repository.refreshById("p1")
+
+        assertTrue(result is ApiResult.HttpError)
+        assertEquals(404, (result as ApiResult.HttpError).code)
+        assertEquals("p1", dao.getPurchaseById("p1")!!.id)
+    }
+
+    @Test
+    fun refreshByIdComRedeForaPreservaCache() = runTest {
+        seed(entity(id = "p1"))
+        coEvery { api.get("p1") } throws IOException("offline")
+
+        val result = repository.refreshById("p1")
+
+        assertTrue(result is ApiResult.NetworkError)
+        assertEquals("p1", dao.getPurchaseById("p1")!!.id)
+    }
+
+    @Test
+    fun refreshByIdRepetidoNaoDuplicaParcelas() = runTest {
+        coEvery { api.get("p1") } returns Response.success(dto(id = "p1"))
+
+        repository.refreshById("p1")
+        repository.refreshById("p1")
+
+        assertEquals(2, dao.getInstallments("p1").size)
+    }
+
     // leitura
 
     @Test

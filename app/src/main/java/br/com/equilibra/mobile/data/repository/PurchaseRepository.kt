@@ -69,6 +69,24 @@ class PurchaseRepository @Inject constructor(
         }
     }
 
+    /**
+     * Busca uma compra por id na API (com suas parcelas) e atualiza o cache.
+     * É o caminho do detalhe (Task 6.9): o cache local pode nem ter a compra
+     * ou pode estar desatualizado. Em erro, preserva o cache e propaga.
+     */
+    suspend fun refreshById(id: String): ApiResult<PurchaseEntity> {
+        return when (val result = safeApiCall { api.get(id) }) {
+            is ApiResult.Success -> {
+                val entity = result.data.toEntity(System.currentTimeMillis())
+                saveAll(listOf(entity), listOf(result.data))
+                ApiResult.Success(entity)
+            }
+            is ApiResult.HttpError -> result
+            is ApiResult.NetworkError -> result
+            is ApiResult.UnknownError -> result
+        }
+    }
+
     // Escritas (cache só depois da confirmação)
 
     suspend fun create(
