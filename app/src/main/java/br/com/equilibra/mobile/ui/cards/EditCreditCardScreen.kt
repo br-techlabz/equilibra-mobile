@@ -53,6 +53,8 @@ import br.com.equilibra.mobile.domain.util.MoneyFormatter
 fun EditCreditCardScreen(
     onSuccess: () -> Unit = {},
     onBack: () -> Unit,
+    /** Task 6.8 — atalho para as compras do cartão (nulo = sem entrada). */
+    onPurchasesClick: (() -> Unit)? = null,
     viewModel: EditCreditCardViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -257,6 +259,17 @@ fun EditCreditCardScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        if (onPurchasesClick != null) {
+            OutlinedButton(
+                onClick = onPurchasesClick,
+                enabled = state.card != null && !state.isLoading,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver compras")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         TextButton(onClick = onBack) {
             Text("Voltar")

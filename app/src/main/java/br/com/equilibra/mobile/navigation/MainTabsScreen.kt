@@ -34,6 +34,8 @@ import br.com.equilibra.mobile.ui.accounts.ReconcileAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
 import br.com.equilibra.mobile.ui.cards.CreateCreditCardScreen
 import br.com.equilibra.mobile.ui.cards.EditCreditCardScreen
+import br.com.equilibra.mobile.ui.purchases.CreatePurchaseScreen
+import br.com.equilibra.mobile.ui.purchases.PurchasesScreen
 import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
@@ -214,8 +216,33 @@ private fun MainTabsNavHost(
         composable(
             route = "cards/{cardId}/edit",
             arguments = listOf(navArgument("cardId") { type = NavType.StringType })
-        ) {
+        ) { entry ->
+            val cardId = entry.arguments?.getString("cardId").orEmpty()
             EditCreditCardScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() },
+                onPurchasesClick = { navController.navigate("cards/$cardId/purchases") }
+            )
+        }
+
+        // Task 6.8 — compras do cartão
+        composable(
+            route = "cards/{cardId}/purchases",
+            arguments = listOf(navArgument("cardId") { type = NavType.StringType })
+        ) { entry ->
+            val cardId = entry.arguments?.getString("cardId").orEmpty()
+            PurchasesScreen(
+                onBack = { navController.popBackStack() },
+                onCreateClick = { navController.navigate("cards/$cardId/purchases/create") }
+            )
+        }
+
+        // Task 6.8 — nova compra parcelada
+        composable(
+            route = "cards/{cardId}/purchases/create",
+            arguments = listOf(navArgument("cardId") { type = NavType.StringType })
+        ) {
+            CreatePurchaseScreen(
                 onSuccess = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
