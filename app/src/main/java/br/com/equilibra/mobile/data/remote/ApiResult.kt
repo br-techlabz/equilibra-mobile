@@ -18,6 +18,10 @@ fun <T> retrofit2.Response<T>.toApiResult(): ApiResult<T> {
     return if (isSuccessful) {
         val body = body()
         if (body != null) ApiResult.Success(body)
+        // 204/205 (ex.: DELETE sem corpo) é sucesso: corpo nulo é legítimo aqui.
+        // Retrofit só entrega body() nulo em resposta vazia, então isso não
+        // mascara 2xx com JSON ausente em endpoints que deveriam devolver algo.
+        else if (code() == 204 || code() == 205) ApiResult.Success(null as T)
         else ApiResult.HttpError(code(), message(), null)
     } else {
         val errorBody = try { errorBody()?.string() } catch (_: Exception) { null }

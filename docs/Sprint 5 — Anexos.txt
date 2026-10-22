@@ -1,0 +1,57 @@
+
+# Sprint 5 — Anexos
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 5.1 — AttachmentApi
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 5.1 — AttachmentApi** do Equilibra Mobile. Objetivo: Criar upload multipart, listar, baixar e excluir anexos. Inspecione contrato e tipos MIME/tamanho aceitos; use streaming para downloads quando possível e erros tipados; binários não passam por Room.
+>
+> Critérios de aceite: Chamadas testadas; multipart correto; arquivos grandes tratados com segurança.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 5.2 — Seletor de arquivos SAF
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 5.2 — Seletor de arquivos SAF** do Equilibra Mobile. Objetivo: Permitir selecionar arquivo pelo Storage Access Framework. Use contratos Activity Result modernos; não solicite permissões amplas de armazenamento; valide tipo/tamanho e mantenha URI válida durante upload.
+>
+> Critérios de aceite: Seleciona documentos sem permissão desnecessária; cancelamento tratado.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 5.3 — Tela de anexos
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 5.3 — Tela de anexos** do Equilibra Mobile. Objetivo: Implementar upload, listagem e download via SAF. Associar anexos à transação; exibir progresso, erros e confirmação de exclusão; salvar download via seletor de destino do SAF.
+>
+> Critérios de aceite: Fluxo completo funcional; metadados atualizados; nenhum binário no Room.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 5.4 — Preview de imagem/PDF
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 5.4 — Preview de imagem/PDF** do Equilibra Mobile. Objetivo: Adicionar visualização para formatos suportados. Use visualização segura, sem executar conteúdo; PDF/imagens com fallback para formato não suportado; considere tamanho e lifecycle.
+>
+> Critérios de aceite: Preview abre formatos suportados e trata falhas sem travar.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 5.5 — Garantir anexos fora do Room
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 5.5 — Garantir anexos fora do Room** do Equilibra Mobile. Objetivo: Auditar e documentar que anexos binários nunca são armazenados localmente no Room. Revise entidades, DAOs e repositórios; somente metadados temporários de UI podem existir em memória; download fica no destino escolhido pelo usuário.
+>
+> Critérios de aceite: Sem coluna blob/arquivo em Room; política documentada e verificável.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.

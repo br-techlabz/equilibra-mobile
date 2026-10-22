@@ -5,6 +5,7 @@ import br.com.equilibra.mobile.data.remote.AuthApi
 import br.com.equilibra.mobile.data.remote.AuthInterceptor
 import br.com.equilibra.mobile.data.remote.CategoryApi
 import br.com.equilibra.mobile.data.remote.AssetAccountApi
+import br.com.equilibra.mobile.data.remote.AttachmentApi
 import br.com.equilibra.mobile.data.remote.DashboardApi
 import br.com.equilibra.mobile.data.remote.ExpenseApi
 import br.com.equilibra.mobile.data.remote.IncomeApi
@@ -112,4 +113,10 @@ object NetworkModule {
     @Singleton
     fun provideTransactionHistoryApi(retrofit: Retrofit): TransactionHistoryApi =
         retrofit.create(TransactionHistoryApi::class.java)
+
+    /** Task 5.1 — anexos (multipart + download em streaming). */
+    @Provides
+    @Singleton
+    fun provideAttachmentApi(retrofit: Retrofit): AttachmentApi =
+        retrofit.create(AttachmentApi::class.java)
 }
