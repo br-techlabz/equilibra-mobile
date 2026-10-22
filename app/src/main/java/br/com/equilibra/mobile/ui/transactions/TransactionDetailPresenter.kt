@@ -10,15 +10,6 @@ import br.com.equilibra.mobile.domain.util.MoneyFormatter
 data class DetailField(val label: String, val value: String)
 
 /**
- * Estado provisório da seção de anexos enquanto a Sprint 5 não entrega a
- * tela de anexos (Task 4.12 pede estado provisório explícito).
- */
-data class AttachmentsState(
-    val isProvisional: Boolean,
-    val message: String? = null
-)
-
-/**
  * Task 4.12 — Montagem da apresentação do detalhe (pura, testável fora do
  * Compose). Formatação monetária segue [MoneyFormatter] (pt-BR) e datas em
  * UTC — mesmo fuso do contrato Instant do backend.
@@ -56,12 +47,6 @@ object TransactionDetailPresenter {
 
         formatDateTime(detail.updatedAt)?.let { add(DetailField("Atualizada em", it)) }
     }
-
-    /** Sprint 5 ainda não entregue: seção sempre provisória nesta task. */
-    fun attachmentsState(attachmentCount: Long?): AttachmentsState = AttachmentsState(
-        isProvisional = true,
-        message = "Anexos estarão disponíveis na próxima versão do app."
-    )
 
     private fun formatDate(iso: String): String =
         DateTimeFormat.formatDate(iso, fallback = iso)

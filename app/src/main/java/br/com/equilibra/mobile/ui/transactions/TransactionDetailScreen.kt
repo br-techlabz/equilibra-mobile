@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import br.com.equilibra.mobile.data.attachment.DocumentAttachmentPicker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.equilibra.mobile.data.repository.AccountRepository
@@ -49,6 +51,7 @@ import br.com.equilibra.mobile.ui.components.ListError
 import br.com.equilibra.mobile.ui.components.ListLoading
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -83,7 +86,7 @@ class TransactionDetailLabelsViewModel @Inject constructor(
  *   sempre da API; nomes de conta/categoria resolvidos do cache.
  * - Ações conforme tipo/status: "Editar" e "Cancelar transação" (esta só com
  *   confirmação, por ser destrutiva). Pagamento de fatura não tem nenhuma.
- * - Seção de anexos com estado provisório explícito até a Sprint 5.
+ * - Anexos reais (Task 5.3): upload/lista/download/exclusão via SAF.
  * - Estados: loading, erro+retry, aviso/erro de cancelamento como snackbar.
  */
 @Composable
@@ -91,12 +94,17 @@ fun TransactionDetailScreen(
     onEdit: (String) -> Unit,
     onBack: () -> Unit,
     viewModel: TransactionDetailViewModel = hiltViewModel(),
-    labelsViewModel: TransactionDetailLabelsViewModel = hiltViewModel()
+    labelsViewModel: TransactionDetailLabelsViewModel = hiltViewModel(),
+    attachmentsPicker: DocumentAttachmentPicker = hiltViewModel(),
+    attachmentsViewModel: TransactionAttachmentsViewModel = hiltViewModel(),
+    previewLoader: AttachmentPreviewLoader? = null
 ) {
     val state by viewModel.uiState.collectAsState()
     val accountNames by labelsViewModel.accountNames.collectAsState()
     val categoryNames by labelsViewModel.categoryNames.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val localContext = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
     var showCancelDialog by remember { mutableStateOf(false) }
 
     // Bug da edição: ao voltar de outra rota a VM sobrevive na backstack
@@ -143,7 +151,14 @@ fun TransactionDetailScreen(
                     accountNames = accountNames,
                     categoryNames = categoryNames,
                     onEdit = onEdit,
-                    onCancelClick = { showCancelDialog = true }
+                    onCancelClick = { showCancelDialog = true },
+                    attachmentsPicker = attachmentsPicker,
+                    attachmentsViewModel = attachmentsViewModel,
+                    previewLoader = previewLoader,
+                    previewTempDir = localContext.cacheDir,
+                    onAttachmentMessage = { message ->
+                        scope.launch { snackbarHostState.showSnackbar(message) }
+                    }
                 )
 
                 // Retry fica interno (padrão do app): quem navega não tem o ViewModel
@@ -184,7 +199,12 @@ private fun DetailContent(
     accountNames: Map<String, String>,
     categoryNames: Map<String, String>,
     onEdit: (String) -> Unit,
-    onCancelClick: () -> Unit
+    onCancelClick: () -> Unit,
+    attachmentsPicker: DocumentAttachmentPicker,
+    attachmentsViewModel: TransactionAttachmentsViewModel,
+    previewLoader: AttachmentPreviewLoader?,
+    previewTempDir: java.io.File,
+    onAttachmentMessage: (String) -> Unit
 ) {
     val detail = state.detail
     val cancelled = detail.status == "CANCELLED"
@@ -246,8 +266,17 @@ private fun DetailContent(
             }
         }
 
-        AttachmentsSection(
-            message = TransactionDetailPresenter.attachmentsState(null).message.orEmpty()
+        // Task 5.3 — anexos reais (upload/lista/download/exclusão via SAF)
+        TransactionAttachmentsSection(
+            transactionId = detail.id,
+            onActionError = onAttachmentMessage,
+            onNotice = onAttachmentMessage,
+            picker = attachmentsPicker,
+            viewModel = attachmentsViewModel,
+            previewLoader = previewLoader ?: remember(attachmentsPicker) {
+                // Reaproveita o repositório já injetado no picker
+                AttachmentPreviewLoader(attachmentsPicker.repository, previewTempDir)
+            }
         )
 
         if (detail.canEdit) {

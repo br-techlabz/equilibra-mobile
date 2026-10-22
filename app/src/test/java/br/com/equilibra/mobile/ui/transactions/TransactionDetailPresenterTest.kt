@@ -143,10 +143,11 @@ class TransactionDetailPresenterTest {
     }
 
     @Test
-    fun `anexos ficam em estado provisorio ate a sprint 5`() {
-        val section = TransactionDetailPresenter.attachmentsState(attachmentCount = null)
+    fun `estado provisorio de anexos foi removido (sprint 5 entregue)`() {
+        // A seção real de anexos (Task 5.3) não usa mais placeholder no presenter.
+        val hasProvisionalApi = TransactionDetailPresenter::class.java.declaredMethods
+            .any { it.name == "attachmentsState" }
 
-        assertTrue(section.isProvisional)
-        assertTrue(section.message!!.contains("próxima versão", ignoreCase = true))
+        assertFalse(hasProvisionalApi)
     }
 }

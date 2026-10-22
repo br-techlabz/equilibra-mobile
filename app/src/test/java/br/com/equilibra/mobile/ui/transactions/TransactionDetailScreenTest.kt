@@ -4,12 +4,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.lifecycle.SavedStateHandle
 import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.data.repository.AccountRepository
+import br.com.equilibra.mobile.data.repository.AttachmentRepository
 import br.com.equilibra.mobile.data.repository.CategoryRepository
 import br.com.equilibra.mobile.data.repository.TransactionRepository
 import br.com.equilibra.mobile.domain.model.transaction.TransactionDetail
@@ -49,6 +51,22 @@ class TransactionDetailScreenTest {
     private lateinit var repository: TransactionRepository
 
     /** Rótulos vazios: os testes aqui cobrem o detalhe, não os catálogos. */
+    /** ViewModel de anexos com repositório falso (lista vazia). */
+    private fun attachmentsViewModel(): TransactionAttachmentsViewModel {
+        val repository = mockk<AttachmentRepository>(relaxed = true)
+        coEvery { repository.list(any()) } returns ApiResult.Success(emptyList())
+        return TransactionAttachmentsViewModel(repository)
+    }
+
+    /** Picker com repositório falso: a seção lista vazio. */
+    private fun picker(): br.com.equilibra.mobile.data.attachment.DocumentAttachmentPicker {
+        val api = mockk<br.com.equilibra.mobile.data.remote.AttachmentApi>(relaxed = true)
+        coEvery { api.list(any()) } returns retrofit2.Response.success(emptyList())
+        return br.com.equilibra.mobile.data.attachment.DocumentAttachmentPicker(
+            br.com.equilibra.mobile.data.repository.AttachmentRepository(api)
+        )
+    }
+
     private fun labelsViewModel() = TransactionDetailLabelsViewModel(
         accountRepository = mockk(relaxed = true),
         categoryRepository = mockk(relaxed = true)
@@ -105,6 +123,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
@@ -126,6 +151,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
@@ -150,6 +182,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = { backed = true }
             )
@@ -166,6 +205,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
@@ -186,6 +232,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
@@ -204,6 +257,13 @@ class TransactionDetailScreenTest {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
@@ -214,25 +274,33 @@ class TransactionDetailScreenTest {
         compose.onNodeWithText("Confirmar").performClick()
         settle()
 
-        // "Cancelada" aparece no badge e no campo Status — basta um exibido
-        compose.onAllNodesWithText("Cancelada").onFirst().assertIsDisplayed()
+        // "Cancelada" aparece no badge (topo) e no campo Status. Rola até o
+        // campo e confere o valor pelo contentDescription do detalhe.
+        compose.onNodeWithText("Status").performScrollTo()
+        compose.onNodeWithContentDescription("Status: Cancelada").performScrollTo().assertIsDisplayed()
     }
 
     @Test
-    fun secaoDeAnexosExibeEstadoProvisorio() {
+    fun secaoDeAnexosRealExibeEstadoVazio() {
         compose.setContent {
             TransactionDetailScreen(
                 viewModel = viewModel(),
                 labelsViewModel = labelsViewModel(),
+                attachmentsPicker = picker(),
+                attachmentsViewModel = attachmentsViewModel(),
+                previewLoader = AttachmentPreviewLoader(
+                    br.com.equilibra.mobile.data.repository.AttachmentRepository(
+                        mockk(relaxed = true)
+                    )
+                ),
                 onEdit = {},
                 onBack = {}
             )
         }
         settle()
 
+        // Task 5.3 — sem placeholder: lista vazia real, vinda da API
         compose.onNodeWithText("Anexos").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithText("Anexos estarão disponíveis na próxima versão do app.")
-            .performScrollTo()
-            .assertIsDisplayed()
+        compose.onNodeWithText("0/10").performScrollTo().assertIsDisplayed()
     }
 }
