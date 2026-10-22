@@ -13,6 +13,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -67,9 +68,13 @@ fun CreatePurchaseScreen(
         }
     }
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { padding ->
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(padding)
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
             .semantics { contentDescription = "Tela de nova compra" },
@@ -175,7 +180,6 @@ fun CreatePurchaseScreen(
         TextButton(onClick = onBack) {
             Text("Voltar")
         }
-
-        SnackbarHost(hostState = snackbarHostState)
+    }
     }
 }

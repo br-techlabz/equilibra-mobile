@@ -229,4 +229,38 @@ class PurchasesScreenTest {
 
         assertEquals("p1", aberto)
     }
+
+    @Test
+    fun erroDoBackendApareceParaOUsuario() {
+        // Bug real encontrado no emulador: o backend respondeu 404
+        // "Category not found." e a tela nao mostrou nada, porque o
+        // SnackbarHost estava dentro do Column rolavel (fora da tela).
+        coEvery { repository.create(any(), any(), any(), any(), any(), any(), any()) } returns
+            ApiResult.HttpError(
+                404, "Not Found",
+                "{\"detail\":\"Category not found.\",\"status\":404}"
+            )
+        val vm = CreatePurchaseViewModel(repository, SavedStateHandle(mapOf("cardId" to "c1")))
+
+        compose.setContent {
+            CreatePurchaseScreen(
+                onSuccess = {},
+                onBack = {},
+                viewModel = vm,
+                categorySelector = {}
+            )
+        }
+
+        vm.onDescriptionChange("Notebook")
+        vm.onAmountChange("100,00")
+        vm.onDateChange("15/10/2026")
+        vm.onInstallmentsChange("3")
+        vm.onCategoryChange("cat-1")
+        compose.onNodeWithText("Registrar compra").performScrollTo().performClick()
+        compose.waitForIdle()
+
+        // o ViewModel mapeia 404 para uma mensagem propria; o importante e
+        // que o erro FIQUE VISIVEL (antes o snackbar ficava fora da tela)
+        compose.onNodeWithText("Cartão ou categoria não encontrados.").assertIsDisplayed()
+    }
 }
