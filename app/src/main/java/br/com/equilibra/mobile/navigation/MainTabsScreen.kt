@@ -32,6 +32,7 @@ import br.com.equilibra.mobile.ui.accounts.TagsScreen
 import br.com.equilibra.mobile.ui.accounts.EditAccountScreen
 import br.com.equilibra.mobile.ui.accounts.ReconcileAccountScreen
 import br.com.equilibra.mobile.ui.cards.CardsScreen
+import br.com.equilibra.mobile.ui.cards.CreateCreditCardScreen
 import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
@@ -193,7 +194,19 @@ private fun MainTabsNavHost(
         }
 
         composable(MainTab.CARDS.route) {
-            CardsScreen()
+            CardsScreen(
+                // Task 6.5: edição de cartão; por enquanto clique não navega (sem link quebrado)
+                onCardClick = { _ -> },
+                onCreateClick = { navController.navigate("cards/create") }
+            )
+        }
+
+        // Task 6.4 — criar cartão
+        composable("cards/create") {
+            CreateCreditCardScreen(
+                onSuccess = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(MainTab.REPORTS.route) {

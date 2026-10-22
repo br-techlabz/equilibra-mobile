@@ -60,6 +60,8 @@ import br.com.equilibra.mobile.ui.components.ListLoading
 @Composable
 fun CardsScreen(
     onCardClick: (String) -> Unit = {},
+    /** Task 6.4 — criação de cartão (nulo = sem entrada de criação). */
+    onCreateClick: (() -> Unit)? = null,
     viewModel: CardsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -84,7 +86,8 @@ fun CardsScreen(
                 cards = s.cards,
                 isRefreshing = s.isRefreshing,
                 onRefresh = { viewModel.refresh() },
-                onCardClick = onCardClick
+                onCardClick = onCardClick,
+                onCreateClick = onCreateClick
             )
             is CardsUiState.Error -> ListError(
                 message = s.message,
@@ -105,7 +108,8 @@ private fun SuccessContent(
     cards: List<CreditCardEntity>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    onCardClick: (String) -> Unit
+    onCardClick: (String) -> Unit,
+    onCreateClick: (() -> Unit)?
 ) {
     if (cards.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -116,7 +120,9 @@ private fun SuccessContent(
             ) {
                 ListEmptyState(
                     title = "Nenhum cartão cadastrado",
-                    subtitle = "Os cartões podem ser criados em uma próxima atualização do app",
+                    subtitle = if (onCreateClick != null) "Crie um cartão para acompanhar suas compras" else "Os cartões podem ser criados em uma próxima atualização do app",
+                    actionLabel = onCreateClick?.let { "Criar cartão" },
+                    onAction = onCreateClick,
                     icon = Icons.Default.CreditCard
                 )
             }
@@ -135,11 +141,22 @@ private fun SuccessContent(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Text(
-                    text = "Cartões",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Cartões",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (onCreateClick != null) {
+                        TextButton(onClick = onCreateClick) {
+                            Text("Novo cartão")
+                        }
+                    }
+                }
             }
 
             items(cards, key = { it.id }) { card ->
