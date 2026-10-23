@@ -1,0 +1,81 @@
+
+# Sprint 7 — Faturas e Pagamento
+Execute as tasks abaixo em sequência, validando cada entrega antes de iniciar a seguinte.
+
+## Task 7.1 — StatementEntity, DAO, API e DTOs
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.1 — StatementEntity, DAO, API e DTOs** do Equilibra Mobile. Objetivo: Criar camada de faturas. Inclua ciclo, vencimento, status, total, pago e pendente como valores decimais String; respeite enum/status reais da API.
+>
+> Critérios de aceite: DAO e DTOs testados; precisão preservada.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.2 — StatementRepository
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.2 — StatementRepository** do Equilibra Mobile. Objetivo: Implementar API-first e cache Room de faturas. Sincronize após fechamento/pagamento e pull-to-refresh; cache para leitura; estados de fatura não devem ser inferidos pelo cliente.
+>
+> Critérios de aceite: Testes de sincronização e erros.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.3 — Tela de faturas
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.3 — Tela de faturas** do Equilibra Mobile. Objetivo: Exibir fatura atual e histórico com leitura Room-first. Seleção de cartão; ordenação por ciclo/vencimento; status visíveis; atualizar via API em background.
+>
+> Critérios de aceite: Atual e histórico corretos; estados completos.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.4 — Fechar fatura
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.4 — Fechar fatura** do Equilibra Mobile. Objetivo: Implementar ação de fechamento manual via endpoint /close. Confirmar ação; evitar chamadas duplicadas; tratar fatura já fechada e sincronizar a resposta do servidor.
+>
+> Critérios de aceite: Fechamento refletido em cache/lista; erros claros.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.5 — Detalhe da fatura
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.5 — Detalhe da fatura** do Equilibra Mobile. Objetivo: Exibir itens, total, pago, pendente e vencimento. Carregue itens conforme contrato; apresente valores e status; separar estado de carregamento e falha.
+>
+> Critérios de aceite: Detalhes conferem com API e valores agregados.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.6 — Pagar fatura
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.6 — Pagar fatura** do Equilibra Mobile. Objetivo: Permitir escolher conta, valor e data; enviar idempotency key. Gere chave única por intenção de pagamento e reutilize a mesma chave em retry da mesma operação; não gere uma chave nova em retry cego. Validar saldo apenas se backend fornecer fonte confiável, sem prometer garantia local.
+>
+> Critérios de aceite: Pagamento não duplica por retry; resultado sincroniza fatura e contas; testes de idempotência.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
+## Task 7.7 — Atualizar resumo de cartão do dashboard
+
+**Prompt para Claude Code**
+
+> Implemente a **Task 7.7 — Atualizar resumo de cartão do dashboard** do Equilibra Mobile. Objetivo: Mostrar faturas pendentes, próximo vencimento e limite. Conectar ao contrato de dashboard; após pagamento/fechamento, atualizar dashboard por nova consulta, pois ele não usa Room.
+>
+> Critérios de aceite: Indicadores atualizados por API e estado de erro tratado.
+>
+> Siga todas as instruções globais deste documento. Inspecione o código antes de editar, implemente somente este escopo, adicione/ajuste testes, execute as verificações disponíveis e informe honestamente resultados, arquivos alterados e pendências. Não avance para outra task.
+
+
