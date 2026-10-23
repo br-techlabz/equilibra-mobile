@@ -62,6 +62,8 @@ fun CardsScreen(
     onCardClick: (String) -> Unit = {},
     /** Task 6.4 — criação de cartão (nulo = sem entrada de criação). */
     onCreateClick: (() -> Unit)? = null,
+    /** Task 7.3 — entrada para a tela de faturas (nulo = sem entrada). */
+    onStatementsClick: (() -> Unit)? = null,
     viewModel: CardsViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -87,7 +89,8 @@ fun CardsScreen(
                 isRefreshing = s.isRefreshing,
                 onRefresh = { viewModel.refresh() },
                 onCardClick = onCardClick,
-                onCreateClick = onCreateClick
+                onCreateClick = onCreateClick,
+                onStatementsClick = onStatementsClick
             )
             is CardsUiState.Error -> ListError(
                 message = s.message,
@@ -109,7 +112,8 @@ private fun SuccessContent(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onCardClick: (String) -> Unit,
-    onCreateClick: (() -> Unit)?
+    onCreateClick: (() -> Unit)?,
+    onStatementsClick: (() -> Unit)?
 ) {
     if (cards.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -151,9 +155,16 @@ private fun SuccessContent(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (onCreateClick != null) {
-                        TextButton(onClick = onCreateClick) {
-                            Text("Novo cartão")
+                    Row {
+                        if (onStatementsClick != null) {
+                            TextButton(onClick = onStatementsClick) {
+                                Text("Faturas")
+                            }
+                        }
+                        if (onCreateClick != null) {
+                            TextButton(onClick = onCreateClick) {
+                                Text("Novo cartão")
+                            }
                         }
                     }
                 }

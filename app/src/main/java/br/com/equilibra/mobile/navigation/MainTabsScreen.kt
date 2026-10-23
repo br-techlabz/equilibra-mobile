@@ -41,6 +41,7 @@ import br.com.equilibra.mobile.ui.dashboard.DashboardScreen
 import br.com.equilibra.mobile.ui.home.HomeViewModel
 import br.com.equilibra.mobile.ui.more.MoreScreen
 import br.com.equilibra.mobile.ui.reports.ReportsScreen
+import br.com.equilibra.mobile.ui.statements.StatementsScreen
 import br.com.equilibra.mobile.ui.transactions.CreateExpenseScreen
 import br.com.equilibra.mobile.ui.transactions.CreateIncomeScreen
 import br.com.equilibra.mobile.ui.transactions.EditExpenseScreen
@@ -201,8 +202,15 @@ private fun MainTabsNavHost(
             CardsScreen(
                 // Task 6.5 — edição de cartão por ID
                 onCardClick = { id -> navController.navigate("cards/$id/edit") },
-                onCreateClick = { navController.navigate("cards/create") }
+                onCreateClick = { navController.navigate("cards/create") },
+                // Task 7.3 — faturas (seleção de cartão dentro da tela)
+                onStatementsClick = { navController.navigate("statements") }
             )
+        }
+
+        // Task 7.3 — fatura atual + histórico por cartão
+        composable("statements") {
+            StatementsScreen(onBack = { navController.popBackStack() })
         }
 
         // Task 6.4 — criar cartão
