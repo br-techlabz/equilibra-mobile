@@ -6,17 +6,20 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import br.com.equilibra.mobile.data.local.creditcard.CreditCardEntity
 import br.com.equilibra.mobile.data.local.statement.StatementEntity
 import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.data.repository.CreditCardRepository
 import br.com.equilibra.mobile.data.repository.StatementRepository
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -134,9 +137,10 @@ class StatementsScreenTest {
         compose.onNodeWithText("Vence em 10/11/2026").assertIsDisplayed()
         compose.onNodeWithText("Total").assertIsDisplayed()
         compose.onAllNodesWithText("100,00", substring = true).onFirst().assertIsDisplayed()
-        compose.onNodeWithText("Histórico").assertIsDisplayed()
-        compose.onNodeWithText("Paga").assertIsDisplayed()
-        compose.onAllNodesWithText("50,00", substring = true).onFirst().assertIsDisplayed()
+        compose.onNodeWithText("Histórico").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Paga").performScrollTo().assertIsDisplayed()
+        compose.onAllNodesWithText("50,00", substring = true).onFirst()
+            .performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -233,5 +237,109 @@ class StatementsScreenTest {
         compose.onNodeWithText("Voltar").performClick()
 
         assertEquals(1, voltou)
+    }
+
+    @Test
+    fun `fatura aberta exibe acao de fechar`() {
+        val atual = statement(id = "atual", status = "OPEN")
+        every { statementRepository.observeByCard("c1") } returns flowOf(listOf(atual))
+        coEvery { statementRepository.refreshByCard("c1") } returns ApiResult.Success(listOf(atual))
+        coEvery { statementRepository.refreshCurrent("c1") } returns ApiResult.Success(atual)
+
+        compose.setContent { StatementsScreen(onBack = {}, viewModel = viewModel()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura").assertIsDisplayed()
+    }
+
+    @Test
+    fun `fatura fechada nao exibe acao de fechar`() {
+        val atual = statement(id = "atual", status = "CLOSED")
+        every { statementRepository.observeByCard("c1") } returns flowOf(listOf(atual))
+        coEvery { statementRepository.refreshByCard("c1") } returns ApiResult.Success(listOf(atual))
+        coEvery { statementRepository.refreshCurrent("c1") } returns ApiResult.Success(atual)
+
+        compose.setContent { StatementsScreen(onBack = {}, viewModel = viewModel()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura").assertDoesNotExist()
+    }
+
+    @Test
+    fun `fechar fatura pede confirmacao e cancelar nao chama api`() {
+        val atual = statement(id = "atual", status = "OPEN")
+        every { statementRepository.observeByCard("c1") } returns flowOf(listOf(atual))
+        coEvery { statementRepository.refreshByCard("c1") } returns ApiResult.Success(listOf(atual))
+        coEvery { statementRepository.refreshCurrent("c1") } returns ApiResult.Success(atual)
+
+        compose.setContent { StatementsScreen(onBack = {}, viewModel = viewModel()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura").performClick()
+        compose.onNodeWithText("Fechar fatura?").assertIsDisplayed()
+        compose.onNodeWithText("A fatura do ciclo 10/2026", substring = true).assertIsDisplayed()
+
+        compose.onNodeWithText("Cancelar").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura?").assertDoesNotExist()
+        coVerify(exactly = 0) { statementRepository.close(any(), any()) }
+    }
+
+    @Test
+    fun `confirmar fechamento reflete status fechado na lista`() {
+        val atual = statement(id = "atual", status = "OPEN")
+        val fechada = atual.copy(status = "CLOSED")
+        val flow = MutableStateFlow(listOf(atual))
+        var current: StatementEntity? = atual
+
+        every { statementRepository.observeByCard("c1") } returns flow
+        coEvery { statementRepository.refreshByCard("c1") } answers {
+            ApiResult.Success(flow.value)
+        }
+        coEvery { statementRepository.refreshCurrent("c1") } answers {
+            current?.let { ApiResult.Success(it) }
+                ?: ApiResult.HttpError(404, "no current", null)
+        }
+        coEvery { statementRepository.close("c1", "2026-10-03") } coAnswers {
+            flow.value = listOf(fechada)
+            current = null
+            ApiResult.Success(fechada)
+        }
+
+        compose.setContent { StatementsScreen(onBack = {}, viewModel = viewModel()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura").performClick()
+        compose.onNodeWithText("Confirmar fechamento").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechada").assertIsDisplayed()
+        compose.onNodeWithText("Fechar fatura").assertDoesNotExist()
+        coVerify(exactly = 1) {
+            statementRepository.close("c1", "2026-10-03")
+        }
+    }
+
+    @Test
+    fun `erro de fatura ja fechada aparece para o usuario`() {
+        val atual = statement(id = "atual", status = "OPEN")
+        every { statementRepository.observeByCard("c1") } returns flowOf(listOf(atual))
+        coEvery { statementRepository.refreshByCard("c1") } returns ApiResult.Success(listOf(atual))
+        coEvery { statementRepository.refreshCurrent("c1") } returns ApiResult.Success(atual)
+        coEvery { statementRepository.close("c1", "2026-10-03") } returns
+            ApiResult.HttpError(409, "fechada", null)
+
+        compose.setContent { StatementsScreen(onBack = {}, viewModel = viewModel()) }
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Fechar fatura").performClick()
+        compose.onNodeWithText("Confirmar fechamento").performClick()
+        compose.waitForIdle()
+
+        compose.onNodeWithText("Não foi possível fechar: a fatura já está fechada.")
+            .assertIsDisplayed()
+        compose.onNodeWithText("Aberta").assertIsDisplayed()
+        compose.onNodeWithText("Fechar fatura").assertIsDisplayed()
     }
 }

@@ -422,4 +422,165 @@ class StatementsViewModelTest {
         assertEquals(listOf("antiga"), vm.uiState.value.history.map { it.id })
         coVerify(exactly = 1) { statementRepository.refreshByCard("c1") }
     }
+
+    @Test
+    fun `abre confirmacao somente para fatura atual aberta`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "OPEN")
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+        assertEquals("atual", vm.uiState.value.confirmCloseId)
+
+        vm.onDismissClose()
+        assertNull(vm.uiState.value.confirmCloseId)
+        coVerify(exactly = 0) { statementRepository.close(any(), any()) }
+    }
+
+    @Test
+    fun `nao abre confirmacao para fatura ja fechada`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "CLOSED")
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+
+        assertNull(vm.uiState.value.confirmCloseId)
+        coVerify(exactly = 0) { statementRepository.close(any(), any()) }
+    }
+
+    @Test
+    fun `confirmar fechamento envia ciclo e ressincroniza lista e atual`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "OPEN")
+        val proxima = statement(
+            id = "proxima",
+            cycleStart = "2026-11-03",
+            dueDate = "2026-12-10",
+            status = "OPEN"
+        )
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+
+        val fechada = atual.copy(status = "CLOSED")
+        coEvery { statementRepository.close("c1", "2026-10-03") } coAnswers {
+            saveIntoFlow("c1", fechada)
+            currentByCard["c1"] = proxima
+            ApiResult.Success(fechada)
+        }
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+        vm.onConfirmClose()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isClosing)
+        assertNull(state.confirmCloseId)
+        assertEquals("proxima", state.current?.id)
+        assertEquals(listOf("atual"), state.history.map { it.id })
+        assertEquals("CLOSED", state.history.single().status)
+        assertTrue(flowFor("c1").value.any { it.id == "atual" && it.status == "CLOSED" })
+        coVerify(exactly = 1) {
+            statementRepository.close("c1", "2026-10-03")
+        }
+        coVerify(exactly = 2) { statementRepository.refreshByCard("c1") }
+        coVerify(exactly = 2) { statementRepository.refreshCurrent("c1") }
+    }
+
+    @Test
+    fun `confirmacoes repetidas nao duplicam a chamada de fechamento`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "OPEN")
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+
+        val gate = CompletableDeferred<ApiResult<StatementEntity>>()
+        coEvery { statementRepository.close("c1", "2026-10-03") } coAnswers {
+            gate.await()
+        }
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+        vm.onConfirmClose()
+        runCurrent()
+        assertTrue(vm.uiState.value.isClosing)
+
+        vm.onConfirmClose()
+        vm.onCloseClick("atual")
+        runCurrent()
+
+        coVerify(exactly = 1) {
+            statementRepository.close("c1", "2026-10-03")
+        }
+
+        gate.complete(ApiResult.Success(atual.copy(status = "CLOSED")))
+        advanceUntilIdle()
+
+        assertFalse(vm.uiState.value.isClosing)
+        assertNull(vm.uiState.value.confirmCloseId)
+    }
+
+    @Test
+    fun `fatura ja fechada no servidor mostra erro claro e preserva estado`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "OPEN")
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+        coEvery { statementRepository.close("c1", "2026-10-03") } returns
+            ApiResult.HttpError(409, "fechada", null)
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+        vm.onConfirmClose()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isClosing)
+        assertNull(state.confirmCloseId)
+        assertTrue(state.error!!.contains("já está fechada"))
+        assertEquals("atual", state.current?.id)
+        assertEquals("OPEN", state.current?.status)
+        coVerify(exactly = 1) {
+            statementRepository.close("c1", "2026-10-03")
+        }
+    }
+
+    @Test
+    fun `falha de rede ao fechar mostra erro e preserva fatura`() = runTest {
+        cardsFlow.value = listOf(card())
+        val atual = statement(id = "atual", status = "OPEN")
+        flowFor("c1").value = listOf(atual)
+        currentByCard["c1"] = atual
+        coEvery { statementRepository.close("c1", "2026-10-03") } returns
+            ApiResult.NetworkError(IOException("offline"))
+
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        vm.onCloseClick("atual")
+        vm.onConfirmClose()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isClosing)
+        assertNull(state.confirmCloseId)
+        assertEquals("Sem conexão. Tente novamente.", state.error)
+        assertEquals("atual", state.current?.id)
+        assertEquals("OPEN", state.current?.status)
+    }
 }

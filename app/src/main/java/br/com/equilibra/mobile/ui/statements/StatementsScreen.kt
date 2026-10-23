@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
@@ -49,13 +53,16 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Task 7.3 — Tela de faturas.
+ * Task 7.3/7.4 — Tela de faturas e fechamento manual.
  *
  * - Seletor de cartão (todos os cartões, ativos e inativos).
  * - Fatura atual separada do histórico; histórico do ciclo mais recente para
  *   o mais antigo (cycleStart DESC, desempate por dueDate DESC).
  * - Status sempre visível (Aberta, Fechada, Vencida, Parcialmente paga, Paga,
  *   Cancelada). Nenhum valor é recalculado; tudo vem do backend/Room.
+ * - Fatura atual OPEN oferece "Fechar fatura", com confirmação e bloqueio
+ *   enquanto a chamada está em andamento. O status fechado só aparece depois
+ *   da resposta/sincronização do backend.
  * - Room-first: o cache aparece antes; a API atualiza em background.
  * - Pull-to-refresh, loading, vazio e erro com retry; snackbar para erros
  *   recuperáveis quando já existe conteúdo em tela.
@@ -122,7 +129,8 @@ fun StatementsScreen(
                     ) {
                         StatementsContent(
                             current = state.current,
-                            history = state.history
+                            history = state.history,
+                            onCloseClick = viewModel::onCloseClick
                         )
                     }
                 }
@@ -134,6 +142,54 @@ fun StatementsScreen(
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
+
+    val closeTarget = state.confirmCloseId?.let { id ->
+        state.current?.takeIf { it.id == id }
+    }
+    closeTarget?.let { statement ->
+        CloseStatementDialog(
+            statement = statement,
+            isClosing = state.isClosing,
+            onConfirm = viewModel::onConfirmClose,
+            onDismiss = viewModel::onDismissClose
+        )
+    }
+}
+
+@Composable
+private fun CloseStatementDialog(
+    statement: StatementEntity,
+    isClosing: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Fechar fatura?") },
+        text = {
+            Text(
+                "A fatura do ciclo ${cycleMonth(statement.cycleStart)} será fechada. " +
+                    "Confirme para enviar a ação ao servidor."
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm, enabled = !isClosing) {
+                if (isClosing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(if (isClosing) "Fechando..." else "Confirmar fechamento")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss, enabled = !isClosing) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -185,7 +241,8 @@ private fun CardSelector(
 @Composable
 private fun StatementsContent(
     current: StatementEntity?,
-    history: List<StatementEntity>
+    history: List<StatementEntity>,
+    onCloseClick: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -205,7 +262,10 @@ private fun StatementsContent(
         } else {
             current?.let { statement ->
                 item(key = "current_${statement.id}") {
-                    CurrentStatementCard(statement)
+                    CurrentStatementCard(
+                        statement = statement,
+                        onCloseClick = { onCloseClick(statement.id) }
+                    )
                 }
             }
 
@@ -226,7 +286,10 @@ private fun StatementsContent(
 }
 
 @Composable
-private fun CurrentStatementCard(statement: StatementEntity) {
+private fun CurrentStatementCard(
+    statement: StatementEntity,
+    onCloseClick: () -> Unit
+) {
     val status = StatementStatusDto.labelPtBr(statement.status)
 
     Card(
@@ -277,6 +340,16 @@ private fun CurrentStatementCard(statement: StatementEntity) {
             AmountRow("Total", statement.totalAmount)
             AmountRow("Pago", statement.paidAmount)
             AmountRow("Pendente", statement.outstandingAmount, emphasize = true)
+
+            if (statement.status == StatementStatusDto.OPEN) {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                    onClick = onCloseClick,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Fechar fatura")
+                }
+            }
         }
     }
 }

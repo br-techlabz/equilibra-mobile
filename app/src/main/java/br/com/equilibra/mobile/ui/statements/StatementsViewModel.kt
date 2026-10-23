@@ -6,6 +6,7 @@ import br.com.equilibra.mobile.data.local.creditcard.CreditCardEntity
 import br.com.equilibra.mobile.data.local.statement.StatementEntity
 import br.com.equilibra.mobile.data.remote.ApiResult
 import br.com.equilibra.mobile.data.remote.dto.creditcard.CreditCardStatusDto
+import br.com.equilibra.mobile.data.remote.dto.statement.StatementStatusDto
 import br.com.equilibra.mobile.data.repository.CreditCardRepository
 import br.com.equilibra.mobile.data.repository.StatementRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,11 +19,12 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Task 7.3 — Estado da tela de faturas.
+ * Task 7.3/7.4 — Estado da tela de faturas.
  *
  * [current] é a fatura atual devolvida pelo backend; [history] são as demais,
  * do ciclo mais recente para o mais antigo. Nenhum status ou agregado é
- * calculado aqui — os campos vêm prontos do Room/API.
+ * calculado aqui — os campos vêm prontos do Room/API. [confirmCloseId] e
+ * [isClosing] controlam apenas a confirmação/envio do fechamento manual.
  */
 data class StatementsUiState(
     val cards: List<CreditCardEntity> = emptyList(),
@@ -31,13 +33,16 @@ data class StatementsUiState(
     val history: List<StatementEntity> = emptyList(),
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    /** Fatura aguardando confirmação de fechamento (null = sem diálogo). */
+    val confirmCloseId: String? = null,
+    val isClosing: Boolean = false
 ) {
     val hasStatements: Boolean get() = current != null || history.isNotEmpty()
 }
 
 /**
- * Task 7.3 — Tela de faturas.
+ * Task 7.3/7.4 — Tela de faturas e fechamento manual.
  *
  * - Room-first: o Flow do cache alimenta a tela primeiro; a API sincroniza em
  *   background (lista + /current-statement) sem bloquear a leitura.
@@ -48,6 +53,8 @@ data class StatementsUiState(
  * - Histórico é ordenado por cycleStart DESC (desempate por dueDate DESC).
  * - Falha de sincronização preserva o cache; sem cache vira erro recuperável.
  * - 404 em /current-statement significa "sem fatura atual" (não é erro).
+ * - Fechamento manual (7.4): só a fatura atual OPEN pode ser fechada, com
+ *   confirmação, envio único e ressincronização após a resposta do backend.
  */
 @HiltViewModel
 class StatementsViewModel @Inject constructor(
@@ -96,7 +103,9 @@ class StatementsViewModel @Inject constructor(
                             history = emptyList(),
                             isLoading = false,
                             isRefreshing = false,
-                            error = null
+                            error = null,
+                            confirmCloseId = null,
+                            isClosing = false
                         )
                     }
                 } else {
@@ -120,7 +129,9 @@ class StatementsViewModel @Inject constructor(
                             current = null,
                             history = emptyList(),
                             isLoading = false,
-                            isRefreshing = false
+                            isRefreshing = false,
+                            confirmCloseId = null,
+                            isClosing = false
                         )
                     }
                     return@collectLatest
@@ -133,7 +144,9 @@ class StatementsViewModel @Inject constructor(
                         history = emptyList(),
                         isLoading = true,
                         isRefreshing = false,
-                        error = null
+                        error = null,
+                        confirmCloseId = null,
+                        isClosing = false
                     )
                 }
 
@@ -175,7 +188,9 @@ class StatementsViewModel @Inject constructor(
                 history = emptyList(),
                 isLoading = true,
                 isRefreshing = false,
-                error = null
+                error = null,
+                confirmCloseId = null,
+                isClosing = false
             )
         }
         selectedCardId.value = cardId
@@ -183,6 +198,86 @@ class StatementsViewModel @Inject constructor(
 
     fun dismissError() {
         _uiState.update { it.copy(error = null) }
+    }
+
+    /**
+     * Task 7.4 — Abre a confirmação apenas para a fatura atual e aberta.
+     * O status vem do backend; o app não presume que uma fatura possa ser
+     * fechada por estar vencida ou por qualquer regra local.
+     */
+    fun onCloseClick(statementId: String) {
+        val state = _uiState.value
+        if (state.isClosing) return
+        val current = state.current ?: return
+        if (current.id != statementId || current.status != StatementStatusDto.OPEN) return
+
+        _uiState.update { it.copy(confirmCloseId = statementId, error = null) }
+    }
+
+    fun onDismissClose() {
+        if (_uiState.value.isClosing) return
+        _uiState.update { it.copy(confirmCloseId = null) }
+    }
+
+    /**
+     * Fecha a fatura confirmada. O envio é único: [isClosing] é marcado antes
+     * de sair da thread principal e novas confirmações são ignoradas.
+     *
+     * Em sucesso, o repository já gravou a resposta no Room; em seguida a
+     * lista e o /current-statement são ressincronizados para refletir a nova
+     * fatura do cartão. Nenhum status é previsto pelo cliente.
+     */
+    fun onConfirmClose() {
+        val state = _uiState.value
+        if (state.isClosing) return
+
+        val statementId = state.confirmCloseId ?: return
+        val current = state.current
+        if (current?.id != statementId || current.status != StatementStatusDto.OPEN) {
+            _uiState.update { it.copy(confirmCloseId = null) }
+            return
+        }
+        val cardId = state.selectedCardId ?: return
+
+        _uiState.update { it.copy(isClosing = true, error = null) }
+
+        viewModelScope.launch {
+            val result = statementRepository.close(cardId, current.cycleStart)
+            // O cartão pode ter sido trocado durante a chamada; nesse caso o
+            // estado exibido pertence a outro cartão e não deve ser alterado.
+            if (selectedCardId.value != cardId) return@launch
+
+            when (result) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isClosing = false, confirmCloseId = null) }
+                    refresh()
+                }
+                is ApiResult.HttpError -> {
+                    val message = when (result.code) {
+                        404 -> "Fatura não encontrada."
+                        409 -> "Não foi possível fechar: a fatura já está fechada."
+                        else -> "Erro ao fechar fatura (${result.code})."
+                    }
+                    _uiState.update {
+                        it.copy(isClosing = false, confirmCloseId = null, error = message)
+                    }
+                }
+                is ApiResult.NetworkError -> _uiState.update {
+                    it.copy(
+                        isClosing = false,
+                        confirmCloseId = null,
+                        error = NETWORK_MESSAGE
+                    )
+                }
+                is ApiResult.UnknownError -> _uiState.update {
+                    it.copy(
+                        isClosing = false,
+                        confirmCloseId = null,
+                        error = "Erro inesperado ao fechar fatura."
+                    )
+                }
+            }
+        }
     }
 
     private fun applyCache(cached: List<StatementEntity>) {
