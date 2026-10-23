@@ -8,6 +8,7 @@ import br.com.equilibra.mobile.data.local.account.AccountDao
 import br.com.equilibra.mobile.data.local.category.CategoryDao
 import br.com.equilibra.mobile.data.local.creditcard.CreditCardDao
 import br.com.equilibra.mobile.data.local.purchase.PurchaseDao
+import br.com.equilibra.mobile.data.local.statement.StatementDao
 import br.com.equilibra.mobile.data.local.tag.TagDao
 import br.com.equilibra.mobile.data.local.transaction.TransactionDao
 import dagger.Module
@@ -59,4 +60,8 @@ object DatabaseModule {
     /** Task 6.6 — cache de compras de cartão. */
     @Provides
     fun providePurchaseDao(db: EquilibraDatabase): PurchaseDao = db.purchaseDao()
+
+    /** Task 7.1 — cache de faturas de cartão. */
+    @Provides
+    fun provideStatementDao(db: EquilibraDatabase): StatementDao = db.statementDao()
 }

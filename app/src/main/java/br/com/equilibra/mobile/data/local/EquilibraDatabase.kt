@@ -11,16 +11,19 @@ import br.com.equilibra.mobile.data.local.creditcard.CreditCardEntity
 import br.com.equilibra.mobile.data.local.purchase.InstallmentEntity
 import br.com.equilibra.mobile.data.local.purchase.PurchaseDao
 import br.com.equilibra.mobile.data.local.purchase.PurchaseEntity
+import br.com.equilibra.mobile.data.local.statement.StatementDao
+import br.com.equilibra.mobile.data.local.statement.StatementEntity
+import br.com.equilibra.mobile.data.local.statement.StatementItemEntity
 import br.com.equilibra.mobile.data.local.tag.TagDao
 import br.com.equilibra.mobile.data.local.tag.TagEntity
 import br.com.equilibra.mobile.data.local.transaction.TransactionDao
 import br.com.equilibra.mobile.data.local.transaction.TransactionEntity
 
 /**
- * Task 6.1 — EquilibraDatabase v6
+ * Task 7.1 — EquilibraDatabase v8
  *
- * - Banco: equilibra.db, version = 7 (contas + categorias + tags + transações +
- *   cartões + compras de cartão)
+ * - Banco: equilibra.db, version = 8 (contas + categorias + tags + transações +
+ *   cartões + compras de cartão + faturas de cartão)
  * - Migrations explícitas (Migrations.ALL); sem fallback destrutivo em produção.
  */
 @Database(
@@ -31,9 +34,11 @@ import br.com.equilibra.mobile.data.local.transaction.TransactionEntity
         TransactionEntity::class,
         CreditCardEntity::class,
         PurchaseEntity::class,
-        InstallmentEntity::class
+        InstallmentEntity::class,
+        StatementEntity::class,
+        StatementItemEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
     autoMigrations = []
 )
@@ -53,8 +58,11 @@ abstract class EquilibraDatabase : RoomDatabase() {
     /** Task 6.6 — compras de cartão e suas parcelas. */
     abstract fun purchaseDao(): PurchaseDao
 
+    /** Task 7.1 — faturas de cartão e seus itens. */
+    abstract fun statementDao(): StatementDao
+
     companion object {
         const val DATABASE_NAME = "equilibra.db"
-        const val DATABASE_VERSION = 7
+        const val DATABASE_VERSION = 8
     }
 }

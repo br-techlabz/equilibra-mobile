@@ -186,12 +186,68 @@ object Migrations {
         }
     }
 
+    /**
+     * Task 7.1 — Tabelas `credit_card_statements` e `statement_items`.
+     * Índices e FK espelham o que as Entities declaram (Room valida o schema).
+     * Sem FK para credit_cards (mesma decisão de PurchaseEntity): a API é a
+     * fonte da verdade e o cache de faturas não deve depender do refresh de
+     * cartões.
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `credit_card_statements` (
+                    `id` TEXT NOT NULL,
+                    `creditCardId` TEXT NOT NULL,
+                    `cycleStart` TEXT NOT NULL,
+                    `cycleEnd` TEXT NOT NULL,
+                    `closingAt` TEXT NOT NULL,
+                    `dueDate` TEXT NOT NULL,
+                    `status` TEXT NOT NULL,
+                    `totalAmount` TEXT NOT NULL,
+                    `paidAmount` TEXT NOT NULL,
+                    `outstandingAmount` TEXT NOT NULL,
+                    `syncedAt` INTEGER,
+                    PRIMARY KEY(`id`)
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_credit_card_statements_creditCardId_cycleStart` " +
+                    "ON `credit_card_statements` (`creditCardId`, `cycleStart`)"
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS `statement_items` (
+                    `id` TEXT NOT NULL,
+                    `statementId` TEXT NOT NULL,
+                    `purchaseId` TEXT NOT NULL,
+                    `description` TEXT NOT NULL,
+                    `sequenceNumber` INTEGER NOT NULL,
+                    `totalInstallments` INTEGER NOT NULL,
+                    `amount` TEXT NOT NULL,
+                    `cycleMonth` TEXT NOT NULL,
+                    PRIMARY KEY(`id`),
+                    FOREIGN KEY(`statementId`) REFERENCES `credit_card_statements`(`id`)
+                        ON UPDATE NO ACTION ON DELETE CASCADE
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS `index_statement_items_statementId` " +
+                    "ON `statement_items` (`statementId`)"
+            )
+        }
+    }
+
     val ALL = arrayOf(
         MIGRATION_1_2,
         MIGRATION_2_3,
         MIGRATION_3_4,
         MIGRATION_4_5,
         MIGRATION_5_6,
-        MIGRATION_6_7
+        MIGRATION_6_7,
+        MIGRATION_7_8
     )
 }
